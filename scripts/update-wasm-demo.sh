@@ -30,6 +30,10 @@ echo "▶ Copying artefacts to $OUT_DIR …"
 cp "$JS_SRC"   "$OUT_DIR/basic_js.js"
 cp "$WASM_SRC" "$OUT_DIR/basic_js_bg.wasm"
 
+# Patch the internal wasm filename reference in the JS bundle
+# (trunk generates 'basic-leptos_bg.wasm' but we serve it as 'basic_js_bg.wasm')
+sed -i "s/'basic-leptos_bg\.wasm'/'basic_js_bg.wasm'/g" "$OUT_DIR/basic_js.js"
+
 echo "✔ Done — $(du -sh "$OUT_DIR/basic_js_bg.wasm" | cut -f1) WASM, $(du -sh "$OUT_DIR/basic_js.js" | cut -f1) JS"
 echo ""
 echo "Next: git add docs/public/wasm && git commit -m 'chore: update WASM demo'"

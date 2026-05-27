@@ -1405,7 +1405,7 @@ async function __wbg_init(module_or_path) {
     }
 
     if (module_or_path === undefined) {
-        module_or_path = new URL('basic-leptos_bg.wasm', import.meta.url);
+        module_or_path = new URL('basic_js_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 
