@@ -122,6 +122,7 @@ export default function HomeLayout() {
   const lang = useLang();
   const t = useI18n();
   const docsPath = lang === 'fr' ? '/fr/getting-started' : '/getting-started';
+  const demosPath = lang === 'fr' ? '/fr/demos' : '/demos';
 
   useEffect(() => {
     // Scroll to #demo on mount if hash is present
@@ -223,6 +224,36 @@ export default function HomeLayout() {
             <p className={styles.sectionSub}>{t('demo.sub')}</p>
           </div>
           <GridDemo t={t} />
+
+          {/* Framework demos teaser */}
+          <a href={demosPath} className={styles.fwTeaser}>
+            <div className={styles.fwTeaserText}>
+              <h3 className={styles.fwTeaserTitle}>
+                {t('demo.frameworks.title')}
+              </h3>
+              <p className={styles.fwTeaserSub}>
+                {t('demo.frameworks.sub')}
+              </p>
+            </div>
+            <div className={styles.fwTeaserIcons}>
+              <div className={styles.fwBadge}>
+                <img src="/images/frameworks/leptos.png" alt="" width={20} height={20} />
+                <span>{t('demo.frameworks.leptos')}</span>
+              </div>
+              <div className={styles.fwBadge}>
+                <img src="/images/frameworks/dioxus.png" alt="" width={20} height={20} />
+                <span>{t('demo.frameworks.dioxus')}</span>
+              </div>
+              <div className={styles.fwBadge}>
+                <img src="/images/frameworks/yew.png" alt="" width={20} height={20} />
+                <span>{t('demo.frameworks.yew')}</span>
+              </div>
+            </div>
+            <span className={styles.fwTeaserCta}>
+              {t('demo.frameworks.cta')}
+              <ArrowIcon />
+            </span>
+          </a>
         </div>
       </section>
 

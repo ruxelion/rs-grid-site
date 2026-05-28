@@ -219,6 +219,30 @@
     "en": "Try scrolling, clicking cells, or dragging column edges",
     "fr": "Essayez de scroller, cliquer sur les cellules ou redimensionner les colonnes"
   },
+  "demo.frameworks.title": {
+    "en": "See it integrated with your framework",
+    "fr": "Voyez-le intégré à votre framework"
+  },
+  "demo.frameworks.sub": {
+    "en": "The same grid, mounted via each official framework wrapper. Each demo is a real CSR app running in your browser.",
+    "fr": "La même grille, montée via chaque wrapper officiel. Chaque démo est une vraie app CSR qui tourne dans votre navigateur."
+  },
+  "demo.frameworks.leptos": {
+    "en": "Leptos · CSR",
+    "fr": "Leptos · CSR"
+  },
+  "demo.frameworks.dioxus": {
+    "en": "Dioxus · CSR",
+    "fr": "Dioxus · CSR"
+  },
+  "demo.frameworks.yew": {
+    "en": "Yew · CSR",
+    "fr": "Yew · CSR"
+  },
+  "demo.frameworks.cta": {
+    "en": "Open the framework demos",
+    "fr": "Ouvrir les démos par framework"
+  },
   "arch.tag": {
     "en": "Architecture",
     "fr": "Architecture"

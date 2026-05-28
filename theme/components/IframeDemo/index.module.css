@@ -1,0 +1,74 @@
+.iframeWrapper {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  min-height: 520px;
+  max-height: 900px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--rp-c-bg-mute);
+  border: 1px solid var(--rp-c-divider);
+  margin: 1rem 0 2rem;
+}
+
+.iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: transparent;
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--rp-c-text-2);
+  pointer-events: none;
+  background: var(--rp-c-bg-mute);
+  transition: opacity 250ms ease;
+}
+
+.loadingOverlay[data-loaded='true'] {
+  opacity: 0;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--rp-c-divider);
+  border-top-color: var(--rp-c-brand);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--rp-c-text-2);
+}
+
+.openLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--rp-c-brand);
+  text-decoration: none;
+}
+
+.openLink:hover {
+  text-decoration: underline;
+}

@@ -241,6 +241,90 @@
   line-height: 1.7;
 }
 
+/* ── Framework teaser (under live demo) ── */
+.fwTeaser {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 1.5rem 2rem;
+  margin-top: 2.5rem;
+  padding: 1.5rem 1.75rem;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-lg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+}
+
+.fwTeaser:hover {
+  border-color: var(--rs-border-strong);
+  background: var(--rs-bg-card-hover);
+  transform: translateY(-1px);
+}
+
+.fwTeaserText {
+  min-width: 0;
+}
+
+.fwTeaserTitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+  color: var(--rs-text);
+}
+
+.fwTeaserSub {
+  font-size: 0.85rem;
+  color: var(--rs-text-muted);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.fwTeaserIcons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.fwBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--rs-text-muted);
+  background: var(--rs-primary-light);
+  border: 1px solid var(--rs-code-border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.fwBadge img {
+  display: block;
+  border-radius: 4px;
+}
+
+.fwTeaserCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--rs-primary);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .fwTeaser {
+    grid-template-columns: 1fr;
+  }
+  .fwTeaserCta {
+    justify-self: start;
+  }
+}
+
 /* ── Features grid ── */
 .featuresGrid {
   display: grid;
