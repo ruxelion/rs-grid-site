@@ -25,7 +25,7 @@ jobs:
       - name: Checkout ruxelion-site
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DEPLOY_TOKEN }}
 
       - name: Checkout rs-grid
         uses: actions/checkout@v4
