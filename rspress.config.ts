@@ -206,7 +206,6 @@ export default defineConfig({
     dark: '/images/logo-dark.svg',
     light: '/images/logo-light.svg',
   },
-  logoText: 'rs-grid',
   lang: 'en',
   locales: [
     {
