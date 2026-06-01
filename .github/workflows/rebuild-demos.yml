@@ -31,6 +31,7 @@ jobs:
           repository: ruxelion/rs-grid
           ref: ${{ github.event.inputs.rs_grid_ref || github.event.client_payload.ref || 'main' }}
           path: rs-grid
+          token: ${{ secrets.DEPLOY_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
