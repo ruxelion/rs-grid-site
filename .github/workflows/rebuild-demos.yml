@@ -4,18 +4,24 @@ on:
   # Déclenchement manuel depuis l'onglet Actions
   workflow_dispatch:
     inputs:
-      rs_grid_ref:
-        description: 'Branche / tag / SHA rs-grid à builder'
+      examples_ref:
+        description: 'Branche / tag / SHA des repos rs-grid-example-* à builder'
         default: 'main'
         required: false
 
-  # Déclenchement depuis rs-grid via repository_dispatch
+  # Déclenchement depuis rs-grid via repository_dispatch (sur release v*).
   # Dans rs-grid : curl -X POST .../dispatches -d '{"event_type":"rs-grid-released","client_payload":{"ref":"v1.2.3"}}'
+  # client_payload.ref = le tag rs-grid publié (info / message de commit). Les
+  # démos sont buildées depuis rs-grid-example-*@main : chaque repo épingle
+  # lui-même la version rs-grid (tag) dans son Cargo.toml.
   repository_dispatch:
     types: [rs-grid-released]
 
 permissions:
   contents: write
+
+env:
+  EXAMPLES_REF: ${{ github.event.inputs.examples_ref || 'main' }}
 
 jobs:
   rebuild:
@@ -25,18 +31,48 @@ jobs:
       - name: Checkout ruxelion-site
         uses: actions/checkout@v4
 
-      - name: Checkout rs-grid
+      # The four demos now live in their own repos (extracted from rs-grid's
+      # in-tree examples/*). Each is checked out as a sibling-style folder the
+      # rebuild script reads via the *_SRC env vars.
+      - name: Checkout rs-grid-example-js
         uses: actions/checkout@v4
         with:
-          repository: ruxelion/rs-grid
-          ref: ${{ github.event.inputs.rs_grid_ref || github.event.client_payload.ref || 'main' }}
-          path: rs-grid
+          repository: ruxelion/rs-grid-example-js
+          ref: ${{ env.EXAMPLES_REF }}
+          path: rs-grid-example-js
           token: ${{ secrets.DEPLOY_TOKEN }}
 
+      - name: Checkout rs-grid-example-leptos
+        uses: actions/checkout@v4
+        with:
+          repository: ruxelion/rs-grid-example-leptos
+          ref: ${{ env.EXAMPLES_REF }}
+          path: rs-grid-example-leptos
+          token: ${{ secrets.DEPLOY_TOKEN }}
+
+      - name: Checkout rs-grid-example-dioxus
+        uses: actions/checkout@v4
+        with:
+          repository: ruxelion/rs-grid-example-dioxus
+          ref: ${{ env.EXAMPLES_REF }}
+          path: rs-grid-example-dioxus
+          token: ${{ secrets.DEPLOY_TOKEN }}
+
+      - name: Checkout rs-grid-example-yew
+        uses: actions/checkout@v4
+        with:
+          repository: ruxelion/rs-grid-example-yew
+          ref: ${{ env.EXAMPLES_REF }}
+          path: rs-grid-example-yew
+          token: ${{ secrets.DEPLOY_TOKEN }}
+
+      # Node is needed by the leptos demo: its Trunk pre_build hook compiles
+      # Tailwind (scripts/build-css.mjs → npm). Cache keyed on its lockfile.
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
+          cache-dependency-path: rs-grid-example-leptos/package-lock.json
 
       - name: Setup Rust (stable + wasm32)
         uses: dtolnay/rust-toolchain@stable
@@ -50,7 +86,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.cargo/bin
-          key: ${{ runner.os }}-cargo-demos-${{ hashFiles('rs-grid/**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-demos-${{ hashFiles('rs-grid-example-*/**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-demos-
 
       - name: Install wasm-pack
@@ -66,7 +102,12 @@ jobs:
           fi
 
       - name: Rebuild demos
-        run: bash scripts/update-wasm-demo.sh rs-grid
+        env:
+          JS_SRC: rs-grid-example-js
+          LEPTOS_SRC: rs-grid-example-leptos
+          DIOXUS_SRC: rs-grid-example-dioxus
+          YEW_SRC: rs-grid-example-yew
+        run: bash scripts/update-wasm-demo.sh
 
       - name: Commit & push si changements
         run: |
@@ -74,6 +115,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/public/wasm docs/public/demos
           git diff --staged --quiet && echo "Rien à commiter" && exit 0
-          git commit -m "chore: rebuild WASM demos from rs-grid@${{ github.event.inputs.rs_grid_ref || github.event.client_payload.ref || 'main' }}"
+          git commit -m "chore: rebuild WASM demos (examples@${EXAMPLES_REF}, rs-grid release ${{ github.event.client_payload.ref || 'manual' }})"
           git remote set-url origin https://x-access-token:${{ secrets.DEPLOY_TOKEN }}@github.com/${{ github.repository }}
           git push
