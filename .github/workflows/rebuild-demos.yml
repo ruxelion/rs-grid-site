@@ -22,6 +22,10 @@ permissions:
 
 env:
   EXAMPLES_REF: ${{ github.event.inputs.examples_ref || 'main' }}
+  # The example crates depend on the PRIVATE rs-grid repo via git+tag. Force
+  # cargo to fetch git deps through the git CLI so it honours the credential
+  # rewrite configured below (libgit2 ignores it and fails to authenticate).
+  CARGO_NET_GIT_FETCH_WITH_CLI: "true"
 
 jobs:
   rebuild:
@@ -100,6 +104,13 @@ jobs:
           if ! command -v trunk &> /dev/null; then
             cargo install --locked trunk
           fi
+
+      # The example crates pull rs-grid (private) as a git+tag dependency.
+      # Rewrite github.com fetches to embed the deploy token so cargo can clone
+      # it; paired with CARGO_NET_GIT_FETCH_WITH_CLI=true above.
+      - name: Authenticate cargo to private rs-grid
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.DEPLOY_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Rebuild demos
         env:
