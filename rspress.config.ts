@@ -203,8 +203,8 @@ export default defineConfig({
   description: 'High-performance Rust/WASM data grid engine for the web',
   icon: '/images/favicon.svg',
   logo: {
-    dark: '/images/logo-dark.svg',
-    light: '/images/logo-light.svg',
+    dark: '/images/logo-dark.png',
+    light: '/images/logo-light.png',
   },
   lang: 'en',
   locales: [
