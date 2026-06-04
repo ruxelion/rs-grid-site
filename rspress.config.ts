@@ -201,7 +201,7 @@ export default defineConfig({
   root: 'docs',
   title: 'rs-grid',
   description: 'High-performance Rust/WASM data grid engine for the web',
-  icon: '/images/favicon.svg',
+  icon: '/images/favicon.png',
   logo: {
     dark: '/images/logo-dark.png',
     light: '/images/logo-light.png',
