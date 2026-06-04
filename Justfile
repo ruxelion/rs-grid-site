@@ -1,4 +1,4 @@
-# ruxelion-site — recettes just
+# rs-grid-site — recettes just
 # Usage: just <recipe>
 
 set shell := ["cmd.exe", "/C"]

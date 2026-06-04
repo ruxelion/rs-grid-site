@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout ruxelion-site
+      - name: Checkout rs-grid-site
         uses: actions/checkout@v4
 
       # The four demos now live in their own repos (extracted from rs-grid's
