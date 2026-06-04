@@ -1,4 +1,5 @@
 import { defineConfig } from '@rspress/core';
+import { pluginSitemap } from '@rspress/plugin-sitemap';
 import path from 'path';
 
 const sidebarEN = [
@@ -247,6 +248,33 @@ export default defineConfig({
       },
     ],
     ['script', {}, 'window.RSPRESS_THEME = "dark"'],
+    // Social preview (og:title/og:description/og:type are emitted by Rspress) —
+    // add the ones it does not: image, url, site_name, Twitter card.
+    ['meta', { property: 'og:site_name', content: 'rs-grid' }],
+    ['meta', { property: 'og:url', content: 'https://rs-grid.com/' }],
+    ['meta', { property: 'og:image', content: 'https://rs-grid.com/images/og-cover.png' }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'rs-grid' }],
+    ['meta', {
+      name: 'twitter:description',
+      content: 'High-performance Rust/WASM data grid engine for the web',
+    }],
+    ['meta', { name: 'twitter:image', content: 'https://rs-grid.com/images/og-cover.png' }],
+    // Structured data for AI/search entity recognition.
+    ['script', { type: 'application/ld+json' }, JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'rs-grid',
+      description: 'High-performance Rust/WASM data grid engine for the web',
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'Web',
+      programmingLanguage: ['Rust', 'WebAssembly'],
+      license: 'https://opensource.org/licenses/MIT',
+      url: 'https://rs-grid.com',
+      author: { '@type': 'Organization', name: 'Ruxelion' },
+    })],
   ],
   themeConfig: {
     darkMode: true,
@@ -270,6 +298,7 @@ export default defineConfig({
     },
   },
   globalStyles: path.join(__dirname, 'theme', 'index.css'),
+  plugins: [pluginSitemap({ siteUrl: 'https://rs-grid.com' })],
   llms: true,
   search: {
     codeBlocks: true,
