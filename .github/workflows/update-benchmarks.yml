@@ -4,6 +4,9 @@ on:
   repository_dispatch:
     types: [benchmarks-updated]
 
+permissions:
+  contents: write
+
 jobs:
   update:
     name: Commit updated benchmarks.json
