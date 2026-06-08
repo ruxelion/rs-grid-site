@@ -38,6 +38,7 @@ const sidebarEN = [
       { text: 'Context Menu', link: '/features/context-menu' },
       { text: 'Localization', link: '/features/localization' },
       { text: 'Hit-Testing', link: '/features/hit-testing' },
+      { text: 'Performance', link: '/features/performance' },
     ],
   },
   {
@@ -136,6 +137,7 @@ const sidebarFR = [
       { text: 'Menu contextuel', link: '/fr/features/context-menu' },
       { text: 'Localisation', link: '/fr/features/localization' },
       { text: 'Hit-Testing', link: '/fr/features/hit-testing' },
+      { text: 'Performance', link: '/fr/features/performance' },
     ],
   },
   {

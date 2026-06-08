@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useLang, useI18n } from '@rspress/core/runtime';
 import GridDemo from '../GridDemo';
 import styles from './index.module.css';
+import benchData from '../../data/benchmarks.json';
 
 const ArrowIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -193,13 +194,22 @@ export default function HomeLayout() {
 
           <div className={styles.heroStats}>
             <div className={styles.stat}>
-              <span className={styles.statValue}>10M+</span>
+              <span className={styles.statValue}>∞</span>
               <span className={styles.statLabel}>{t('hero.stat.rows')}</span>
             </div>
             <div className={styles.statDivider} />
             <div className={styles.stat}>
-              <span className={styles.statValue}>&lt;1ms</span>
+              <span className={styles.statValue}>
+                &lt;{Math.ceil(benchData.frame_us.cols50_1M)} µs
+              </span>
               <span className={styles.statLabel}>{t('hero.stat.perf')}</span>
+            </div>
+            <div className={styles.statDivider} />
+            <div className={styles.stat}>
+              <span className={styles.statValue}>
+                {benchData.hit_test_ns.extreme_1Q_rows} ns
+              </span>
+              <span className={styles.statLabel}>{t('hero.stat.hitTest')}</span>
             </div>
             <div className={styles.statDivider} />
             <div className={styles.stat}>

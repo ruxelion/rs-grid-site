@@ -1,0 +1,38 @@
+name: Update benchmark data
+
+on:
+  repository_dispatch:
+    types: [benchmarks-updated]
+
+jobs:
+  update:
+    name: Commit updated benchmarks.json
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Write the JSON payload sent by rs-grid's bench.yml into the data file.
+      # Using an env var avoids shell quoting issues with special characters.
+      - name: Write benchmarks.json
+        env:
+          BENCH_DATA: ${{ toJson(github.event.client_payload.data) }}
+        run: |
+          node -e "
+          const data = JSON.parse(process.env.BENCH_DATA);
+          require('fs').writeFileSync(
+            'theme/data/benchmarks.json',
+            JSON.stringify(data, null, 2) + '\n'
+          );
+          console.log('sha:', data.sha, '— generated:', data.generated);
+          "
+
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add theme/data/benchmarks.json
+          # Only commit if something actually changed.
+          git diff --cached --quiet && echo "No change — skipping commit" && exit 0
+          git commit -m "chore: update benchmark data [skip ci]"
+          git push

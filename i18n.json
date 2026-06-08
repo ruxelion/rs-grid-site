@@ -64,8 +64,12 @@
     "fr": "lignes, zéro latence"
   },
   "hero.stat.perf": {
-    "en": "60fps interaction",
-    "fr": "interaction 60fps"
+    "en": "per frame at 60fps",
+    "fr": "par frame à 60fps"
+  },
+  "hero.stat.hitTest": {
+    "en": "hit-test (1 quadrillion rows)",
+    "fr": "hit-test (1 quadrillion de lignes)"
   },
   "hero.stat.rustValue": {
     "en": "Pure Rust",

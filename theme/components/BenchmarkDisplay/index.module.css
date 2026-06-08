@@ -1,0 +1,203 @@
+/* ── Chart (bar-based) ── */
+
+.chart {
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chartLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rs-text-muted);
+}
+
+.chartBudget {
+  font-size: 0.75rem;
+  color: var(--rs-text-subtle);
+}
+
+/* ── Bar row ── */
+
+.barRow {
+  display: grid;
+  grid-template-columns: 220px 1fr 80px;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.barLabel {
+  font-size: 0.85rem;
+  color: var(--rs-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barTrack {
+  height: 8px;
+  background: var(--rs-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: var(--rs-primary);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.barValue {
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--rs-font-mono, monospace);
+  color: var(--rs-text);
+  text-align: right;
+}
+
+.chartNote {
+  font-size: 0.8rem;
+  color: var(--rs-text-subtle);
+  margin: 1rem 0 0;
+  line-height: 1.6;
+  border-top: 1px solid var(--rs-border);
+  padding-top: 0.875rem;
+}
+
+.rowDesc {
+  font-size: 0.78rem;
+  color: var(--rs-text-subtle);
+  margin: -0.25rem 0 0.75rem 0;
+  padding-left: calc(220px + 0.875rem);
+  line-height: 1.5;
+}
+
+/* ── Tables ── */
+
+.tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.tableBox {
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  padding: 1.25rem;
+}
+
+.tableTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--rs-text-muted);
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rs-text-muted);
+  padding: 0.4rem 0.75rem 0.6rem;
+  border-bottom: 1px solid var(--rs-border);
+}
+
+.table td {
+  padding: 0.5rem 0.75rem;
+  color: var(--rs-text);
+  border-bottom: 1px solid var(--rs-border);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background: var(--rs-bg-surface, rgba(0, 0, 0, 0.02));
+}
+
+.rowHighlight td {
+  color: var(--rs-primary);
+  font-weight: 600;
+}
+
+.mono {
+  font-family: var(--rs-font-mono, monospace);
+  font-size: 0.82rem;
+}
+
+/* ── Generated note ── */
+
+.generatedNote {
+  font-size: 0.78rem;
+  color: var(--rs-text-subtle);
+  margin-top: 2rem;
+  padding: 0.75rem 1rem;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  line-height: 1.6;
+}
+
+.generatedNote code {
+  font-family: var(--rs-font-mono, monospace);
+  font-size: 0.85em;
+  background: var(--rs-primary-light);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 640px) {
+  .barRow {
+    grid-template-columns: 1fr 80px;
+    grid-template-rows: auto auto;
+  }
+
+  .barLabel {
+    grid-column: 1 / -1;
+  }
+
+  .barTrack {
+    grid-column: 1;
+  }
+
+  .barValue {
+    grid-column: 2;
+    grid-row: 2;
+    text-align: right;
+  }
+
+  .rowDesc {
+    padding-left: 0;
+  }
+}
