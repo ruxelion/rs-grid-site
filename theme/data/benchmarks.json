@@ -6,7 +6,7 @@
     "cols50_1M": null,
     "cols50_1Q": null
   },
-  "generated": "2026-06-15T12:44:10.914Z",
+  "generated": "2026-06-15T12:54:33.204Z",
   "hit_test_ns": {
     "cell_1000cols": null,
     "cell_100cols": null,
@@ -34,7 +34,7 @@
     "vec_empty": 56
   },
   "sample_size": 10,
-  "sha": "d0a5f83",
+  "sha": "26dc7aa",
   "sort_ms": {
     "numeric_cached_100k": null,
     "numeric_cold_100k": null,
