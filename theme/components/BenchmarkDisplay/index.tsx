@@ -12,16 +12,19 @@ function fmtRows(n: number): string {
   return String(n);
 }
 
-function fmtNs(ns: number): string {
+function fmtNs(ns: number | null): string {
+  if (ns == null) return '—';
   return `${ns.toFixed(1)} ns`;
 }
 
-function fmtUs(us: number): string {
+function fmtUs(us: number | null): string {
+  if (us == null) return '—';
   if (us >= 1000) return `${(us / 1000).toFixed(2)} ms`;
   return `${us.toFixed(1)} µs`;
 }
 
-function fmtBytes(b: number): string {
+function fmtBytes(b: number | null): string {
+  if (b == null) return '—';
   if (b === 0) return '0';
   if (b >= 1024) return `${(b / 1024).toFixed(1)} KB`;
   return `${b} B`;
@@ -36,11 +39,11 @@ function Bar({
   display,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   max: number;
   display: string;
 }) {
-  const pct = Math.min((value / max) * 100, 100).toFixed(1);
+  const pct = value != null && max > 0 ? Math.min((value / max) * 100, 100).toFixed(1) : '0';
   return (
     <div className={styles.barRow}>
       <span className={styles.barLabel}>{label}</span>
@@ -65,7 +68,8 @@ export function FrameScaleChart() {
     { label: '1 000 cols × 1B rows',    value: data.frame_us.cols1000_1B },
     { label: '50 cols × 1 quadrillion', value: data.frame_us.cols50_1Q },
   ];
-  const max = Math.max(...configs.map(c => c.value)) * 1.25;
+  const values = configs.map(c => c.value).filter((v): v is number => v != null);
+  const max = values.length > 0 ? Math.max(...values) * 1.25 : 1;
   const budget = 16_600;
   const budgetLabel = `60fps budget: ${budget.toLocaleString()} µs`;
 
@@ -165,7 +169,8 @@ export function InitTable() {
     { label: '100',   us: data.init_us.cols_100 },
     { label: '1 000', us: data.init_us.cols_1000 },
   ];
-  const maxCols = Math.max(...byCols.map(r => r.us)) * 1.25;
+  const colValues = byCols.map(r => r.us).filter((v): v is number => v != null);
+  const maxCols = colValues.length > 0 ? Math.max(...colValues) * 1.25 : 1;
 
   return (
     <div className={styles.tables}>
@@ -277,7 +282,8 @@ export function SortTable() {
       ms: data.sort_ms.string_cold_100k,
     },
   ];
-  const max = Math.max(...rows.map(r => r.ms)) * 1.25;
+  const sortValues = rows.map(r => r.ms).filter((v): v is number => v != null);
+  const max = sortValues.length > 0 ? Math.max(...sortValues) * 1.25 : 1;
   return (
     <div className={styles.chart}>
       <div className={styles.chartHeader}>
@@ -289,7 +295,7 @@ export function SortTable() {
             label={r.label}
             value={r.ms}
             max={max}
-            display={`${r.ms.toFixed(1)} ms`}
+            display={r.ms != null ? `${r.ms.toFixed(1)} ms` : '—'}
           />
           <p className={styles.rowDesc}>{r.desc}</p>
         </div>
@@ -301,17 +307,19 @@ export function SortTable() {
 // ── GeneratedNote ─────────────────────────────────────────────────────────────
 
 export function GeneratedNote() {
-  return (
-    <p className={styles.generatedNote}>
-      Measured with Criterion (sample-size={data.sample_size}) on{' '}
-      <code>ubuntu-22.04</code> · commit{' '}
-      <code>{data.sha}</code> ·{' '}
-      {new Date(data.generated).toLocaleDateString('en-US', {
+  const dateStr = data.generated
+    ? new Date(data.generated).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-      })}
-      . Updated automatically on every push to{' '}
+      })
+    : 'pending CI run';
+  return (
+    <p className={styles.generatedNote}>
+      Measured with Criterion (sample-size={data.sample_size ?? '—'}) on{' '}
+      <code>ubuntu-22.04</code> · commit{' '}
+      <code>{data.sha ?? 'pending'}</code> · {dateStr}.
+      Updated automatically on every push to{' '}
       <code>main</code> via CI.
     </p>
   );

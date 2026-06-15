@@ -1,5 +1,12 @@
 node_modules/
-doc_build/
 .rspress/
 dist/
 .DS_Store
+
+# doc_build: ignore HTML/JS/CSS/assets, but track .md and llms*.txt for the MCP server
+doc_build/**
+!doc_build/
+!doc_build/**/
+!doc_build/**/*.md
+!doc_build/llms*.txt
+!doc_build/fr/llms*.txt
