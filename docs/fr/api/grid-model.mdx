@@ -88,6 +88,7 @@ impl GridModelBuilder {
     pub fn pinned_count(self, n: usize) -> Self;    // defaut 0
     pub fn mode(self, m: DataSourceMode) -> Self;   // defaut ClientSide
     pub fn scrollbar_size(self, s: f64) -> Self;    // defaut 14.0
+    pub fn editable(self, v: bool) -> Self;         // defaut true
     pub fn selectable(self, v: bool) -> Self;       // defaut true
     pub fn column_reorderable(self, v: bool) -> Self; // defaut true
     pub fn build(self) -> GridModel;
