@@ -1,17 +1,43 @@
-Open Source · Rust · WebAssembly# Le moteur de data grid
+Open Source · Rust · WebAssembly
+
+# Le moteur de data grid
 conçu pour la performance
 
 Un data grid qui ne ralentit jamais. Parcourez des millions de lignes aussi fluidement que les cent premières — édition, tri et sélection inclus.
 
-[Commencer](/fr/getting-started)[Voir sur GitHub](https://github.com/ruxelion/rs-grid)∞lignes, zéro latence<0 µspar frame à 60fps nshit-test (1 quadrillion de lignes)100% Rustcompilé en WASMMITopen sourceDémo live## Voyez par vous-même
+[Commencer](/fr/getting-started)[Voir sur GitHub](https://github.com/ruxelion/rs-grid)
+
+∞lignes, zéro latence
+
+<0 µspar frame à 60fps
+
+ nshit-test (1 quadrillion de lignes)
+
+100% Rustcompilé en WASM
+
+MITopen source
+
+Démo live
+
+## Voyez par vous-même
 
 Ceci est une véritable instance rs-grid fonctionnant dans votre navigateur via WebAssembly. Scrollez, sélectionnez des cellules, redimensionnez les colonnes — le tout à 60 fps.
 
-1K lignes100K lignes1M lignes[### Voyez-le intégré à votre framework
+1K lignes100K lignes1M lignes
+
+[### Voyez-le intégré à votre framework
 
 La même grille, montée via chaque wrapper officiel. Chaque démo est une vraie app CSR qui tourne dans votre navigateur.
 
-![](/images/frameworks/leptos.png)Leptos · CSR![](/images/frameworks/dioxus.png)Dioxus · CSR![](/images/frameworks/yew.png)Yew · CSROuvrir les démos par framework](/fr/demos)Pourquoi rs-grid## Conçu pour les contraintes réelles
+![](/images/frameworks/leptos.png)Leptos · CSR
+
+![](/images/frameworks/dioxus.png)Dioxus · CSR
+
+![](/images/frameworks/yew.png)Yew · CSROuvrir les démos par framework](/fr/demos)
+
+Pourquoi rs-grid
+
+## Conçu pour les contraintes réelles
 
 La plupart des grilles peinent au-delà de 100k lignes. rs-grid est pensé dès le départ pour la virtualisation, la performance et la maintenabilité.
 
@@ -63,19 +89,59 @@ Menu clic droit avec couper, copier, coller, figer colonnes. Actions et items en
 
 Aucun runtime JavaScript. Logique cœur compilée en WASM. Compatible tout framework ou vanilla JS.
 
-Architecture## Une direction, pas de surprises
+Architecture
+
+## Une direction, pas de surprises
 
 Un graphe de dépendances strictement unidirectionnel garde chaque crate focalisée et testable indépendamment.
 
-GridStatemodel · viewport · selection→SceneBuilderrs-grid-scene→SceneFrameprimitives→CanvasRendererrs-grid-render-canvas→<canvas>browser`rs-grid-core`Logique headless : model, viewport, sélection, hit-testing. Pas de WASM.
+GridState
 
-`rs-grid-scene`Convertit GridState en liste de ScenePrimitive renderer-agnostiques.
+model · viewport · selection
 
-`rs-grid-render-canvas`Backend Canvas2D via wasm-bindgen. Dessine les primitives dans le DOM.
+→
 
-`rs-grid-web`Glue navigateur : events, DPR, boucle rAF, parsing thème CSS.
+SceneBuilder
 
-`rs-grid-leptos`Composant Leptos CSR encapsulant tout le pipeline.
+rs-grid-scene
+
+→
+
+SceneFrame
+
+primitives
+
+→
+
+CanvasRenderer
+
+rs-grid-render-canvas
+
+→
+
+<canvas>
+
+browser
+
+`rs-grid-core`
+
+Logique headless : model, viewport, sélection, hit-testing. Pas de WASM.
+
+`rs-grid-scene`
+
+Convertit GridState en liste de ScenePrimitive renderer-agnostiques.
+
+`rs-grid-render-canvas`
+
+Backend Canvas2D via wasm-bindgen. Dessine les primitives dans le DOM.
+
+`rs-grid-web`
+
+Glue navigateur : events, DPR, boucle rAF, parsing thème CSS.
+
+`rs-grid-leptos`
+
+Composant Leptos CSR encapsulant tout le pipeline.
 
 ## Commencez à construire
 
