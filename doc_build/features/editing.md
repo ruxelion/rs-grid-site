@@ -49,10 +49,19 @@ Restores the original value. No undo entry is created.
 
 The editor type is controlled by `ColumnDef::editor`:
 
-### Text input (default)
+### Text input
 
-When `editor` is `None` or `Some(CellEditor::Text)`, a plain `<input type="text">`
-is shown:
+When `editor` is `Some(CellEditor::Text)`, a plain `<input type="text">` is shown:
+
+```rust
+col.editor = Some(CellEditor::Text);
+```
+
+### No editor (`None`)
+
+When `editor` is `None` (the default for a new column), double-clicking the cell
+dispatches `CancelEdit` and shows no DOM overlay. To enable plain-text editing on
+a column, set `editor` explicitly:
 
 ```rust
 col.editor = Some(CellEditor::Text);
