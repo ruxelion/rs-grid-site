@@ -54,10 +54,19 @@ Restaure la valeur d'origine. Aucune entrée d'annulation n'est créée.
 
 Le type d'éditeur est contrôlé par `ColumnDef::editor` :
 
-### Champ texte (par défaut)
+### Champ texte
 
-Lorsque `editor` vaut `None` ou `Some(CellEditor::Text)`, un simple
-`<input type="text">` est affiché :
+Lorsque `editor` vaut `Some(CellEditor::Text)`, un simple `<input type="text">` est affiché :
+
+```rust
+col.editor = Some(CellEditor::Text);
+```
+
+### Pas d'éditeur (`None`)
+
+Lorsque `editor` vaut `None` (valeur par défaut pour une nouvelle colonne),
+le double-clic déclenche `CancelEdit` et n'affiche aucune superposition DOM.
+Pour activer l'édition texte sur une colonne, définissez `editor` explicitement :
 
 ```rust
 col.editor = Some(CellEditor::Text);
