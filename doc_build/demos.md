@@ -10,19 +10,31 @@ and the same fifteen locales — only the integration layer changes.
 
 A Leptos 0.8 CSR app wrapping `<GridCanvas>` from `rs-grid-leptos`. Reactive
 signals drive the dataset size, theme, locale and editability toggles.
-Loading Leptos demo…rs-grid — Leptos demo[Open Leptos demo in new tab ↗](/demos/leptos/index.html)
+
+Loading Leptos demo…
+
+rs-grid — Leptos demo[Open Leptos demo in new tab ↗](/demos/leptos/index.html)
+
 
 **[object Object]**
 
 A Dioxus CSR app using `rs-grid-dioxus`. Same controls, same dataset,
 different framework idioms.
-Loading Dioxus demo…rs-grid — Dioxus demo[Open Dioxus demo in new tab ↗](/demos/dioxus/index.html)
+
+Loading Dioxus demo…
+
+rs-grid — Dioxus demo[Open Dioxus demo in new tab ↗](/demos/dioxus/index.html)
+
 
 **[object Object]**
 
 A Yew CSR app using `rs-grid-yew`. Demonstrates the same pipeline plugged
 into Yew's component model and message passing.
-Loading Yew demo…rs-grid — Yew demo[Open Yew demo in new tab ↗](/demos/yew/index.html)
+
+Loading Yew demo…
+
+rs-grid — Yew demo[Open Yew demo in new tab ↗](/demos/yew/index.html)
+
 
 ## What you're looking at
 

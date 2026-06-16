@@ -10,7 +10,20 @@ The complete per-frame cost — `ScrollBy` → viewport recalc → `SceneBuilder
 across wildly different dataset sizes. The renderer sees only the \~275 cells visible in the
 viewport at any moment, regardless of how many rows exist in the datasource.
 
-Time per frame (µs)60fps budget: 16,600 µs20 cols × 10k rows—50 cols × 1M rows—100 cols × 10M rows—1 000 cols × 1B rows—50 cols × 1 quadrillion—All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
+
+Time per frame (µs)60fps budget: 16,600 µs
+
+20 cols × 10k rows—
+
+50 cols × 1M rows—
+
+100 cols × 10M rows—
+
+1 000 cols × 1B rows—
+
+50 cols × 1 quadrillion—
+
+All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
 
 
 ## Hit-test — O(log n\_cols)
@@ -18,6 +31,7 @@ Time per frame (µs)60fps budget: 16,600 µs20 cols × 10k rows—50 cols × 1M 
 Every click, hover, and drag starts with a hit-test: converting a viewport coordinate to a
 `(row, col)` address. Column resolution uses precomputed offsets and a binary search — O(log n\_cols).
 Row resolution is O(1) thanks to uniform row height. Total row count has zero effect.
+
 
 Varying row count (1 000 cols fixed)
 
@@ -44,6 +58,7 @@ offsets. Going from 1 000 rows to 1 quadrillion rows costs **nothing**.
 `GridState::new` precomputes column offsets and flex widths. With `FnDataSource` (virtual rows),
 row count is just a `u64` stored in a closure — it carries no allocation cost.
 
+
 Varying row count — FnDataSource (20 cols fixed)
 
 | Rows | Init time |
@@ -59,7 +74,16 @@ Flat regardless of row count — O(n_cols), not O(n_rows).
 
 Varying column count (1M rows fixed)
 
-5 cols—20 cols—50 cols—100 cols—1 000 cols—
+5 cols—
+
+20 cols—
+
+50 cols—
+
+100 cols—
+
+1 000 cols—
+
 Initializing a grid with **1 quadrillion virtual rows** takes the same \~5 µs as a grid with
 1 000 rows. If you need all data in memory (`VecDataSource`), initialization is still dominated
 by column setup, not row count.
@@ -70,11 +94,20 @@ Sort uses a two-phase algorithm: numeric columns use an 8-pass LSD radix sort (O
 columns fall back to `sort_unstable_by`. A key cache avoids re-extracting values when toggling
 sort direction on the same column.
 
-100 000 rows — sort time (ms)Numeric sort (cold)—Radix sort, first call — key extraction + sort
 
-Numeric sort (cached)—Radix sort, direction toggle — keys reused from cache
+100 000 rows — sort time (ms)
 
-String sort (cold)—Lexicographic comparison sort
+Numeric sort (cold)—
+
+Radix sort, first call — key extraction + sort
+
+Numeric sort (cached)—
+
+Radix sort, direction toggle — keys reused from cache
+
+String sort (cold)—
+
+Lexicographic comparison sort
 
 
 Client-side sort is limited to 1 000 000 rows (`MAX_CLIENT_SORT_ROWS`). Beyond that,
@@ -84,6 +117,7 @@ rs-grid emits a `SortWarning` and delegates to your backend.
 
 The datasource determines per-row memory cost. With `FnDataSource`, rows have no allocation —
 data is generated on demand. With `VecDataSource`, each `RowRecord` allocates a `HashMap`.
+
 
 | Data source | Description | Memory / row |
 | --- | --- | --- |
@@ -95,5 +129,6 @@ data is generated on demand. With `VecDataSource`, each `RowRecord` allocates a 
 For large datasets (> 100k rows), prefer `FnDataSource` with server-side pagination.
 See [FnDataSource](/data/fn-datasource.md) and [PageCache](/data/page-cache.md) for implementation details.
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `8c767bd` · June 15, 2026. Updated automatically on every push to `main` via CI.
+
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `039cd5d` · June 15, 2026. Updated automatically on every push to `main` via CI.
 

@@ -1,17 +1,43 @@
-Open Source · Rust · WebAssembly# The data grid engine
+Open Source · Rust · WebAssembly
+
+# The data grid engine
 built for performance
 
 A data grid that never slows down. Scroll through millions of rows as smoothly as the first hundred — editing, sorting, and selecting included.
 
-[Get started](/getting-started)[View on GitHub](https://github.com/ruxelion/rs-grid)∞rows, zero lag<0 µsper frame at 60fps nshit-test (1 quadrillion rows)Pure Rustcompiled to WASMMITopen sourceLive Demo## See it in action
+[Get started](/getting-started)[View on GitHub](https://github.com/ruxelion/rs-grid)
+
+∞rows, zero lag
+
+<0 µsper frame at 60fps
+
+ nshit-test (1 quadrillion rows)
+
+Pure Rustcompiled to WASM
+
+MITopen source
+
+Live Demo
+
+## See it in action
 
 This is a real rs-grid instance running in your browser via WebAssembly. Scroll, select cells, resize columns — all at 60 fps.
 
-1K rows100K rows1M rows[### See it integrated with your framework
+1K rows100K rows1M rows
+
+[### See it integrated with your framework
 
 The same grid, mounted via each official framework wrapper. Each demo is a real CSR app running in your browser.
 
-![](/images/frameworks/leptos.png)Leptos · CSR![](/images/frameworks/dioxus.png)Dioxus · CSR![](/images/frameworks/yew.png)Yew · CSROpen the framework demos](/demos)Why rs-grid## Built for the hard constraints
+![](/images/frameworks/leptos.png)Leptos · CSR
+
+![](/images/frameworks/dioxus.png)Dioxus · CSR
+
+![](/images/frameworks/yew.png)Yew · CSROpen the framework demos](/demos)
+
+Why rs-grid
+
+## Built for the hard constraints
 
 Most grid libraries struggle past 100k rows. rs-grid is designed from the ground up for virtualization, performance, and long-term maintainability.
 
@@ -63,19 +89,59 @@ Right-click menu with cut, copy, paste, pin columns. Fully customizable items an
 
 Zero JavaScript runtime. Core logic compiled to WASM. Works with any framework or vanilla JS.
 
-Architecture## One direction, no surprises
+Architecture
+
+## One direction, no surprises
 
 A strict unidirectional dependency graph keeps each crate focused and independently testable.
 
-GridStatemodel · viewport · selection→SceneBuilderrs-grid-scene→SceneFrameprimitives→CanvasRendererrs-grid-render-canvas→<canvas>browser`rs-grid-core`Headless logic: model, viewport, selection, hit-testing. No WASM dependency.
+GridState
 
-`rs-grid-scene`Converts GridState to renderer-agnostic ScenePrimitive list.
+model · viewport · selection
 
-`rs-grid-render-canvas`Canvas2D backend via wasm-bindgen. Draws primitives to the DOM.
+→
 
-`rs-grid-web`Browser glue: events, DPR, rAF loop, CSS theme parsing.
+SceneBuilder
 
-`rs-grid-leptos`Leptos CSR component wrapping the full pipeline.
+rs-grid-scene
+
+→
+
+SceneFrame
+
+primitives
+
+→
+
+CanvasRenderer
+
+rs-grid-render-canvas
+
+→
+
+<canvas>
+
+browser
+
+`rs-grid-core`
+
+Headless logic: model, viewport, selection, hit-testing. No WASM dependency.
+
+`rs-grid-scene`
+
+Converts GridState to renderer-agnostic ScenePrimitive list.
+
+`rs-grid-render-canvas`
+
+Canvas2D backend via wasm-bindgen. Draws primitives to the DOM.
+
+`rs-grid-web`
+
+Browser glue: events, DPR, rAF loop, CSS theme parsing.
+
+`rs-grid-leptos`
+
+Leptos CSR component wrapping the full pipeline.
 
 ## Start building today
 

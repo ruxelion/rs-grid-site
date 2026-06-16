@@ -12,19 +12,31 @@ seule la couche d'intégration change.
 Une app Leptos 0.8 CSR qui embarque `<GridCanvas>` de `rs-grid-leptos`.
 Les signaux pilotent la taille du dataset, le thème, la locale et les
 toggles d'édition.
-Chargement de la démo Leptos…rs-grid — démo Leptos[Ouvrir la démo Leptos dans un nouvel onglet ↗](/demos/leptos/index.html)
+
+Chargement de la démo Leptos…
+
+rs-grid — démo Leptos[Ouvrir la démo Leptos dans un nouvel onglet ↗](/demos/leptos/index.html)
+
 
 **[object Object]**
 
 Une app Dioxus CSR utilisant `rs-grid-dioxus`. Mêmes contrôles, même
 dataset, idiomes de framework différents.
-Chargement de la démo Dioxus…rs-grid — démo Dioxus[Ouvrir la démo Dioxus dans un nouvel onglet ↗](/demos/dioxus/index.html)
+
+Chargement de la démo Dioxus…
+
+rs-grid — démo Dioxus[Ouvrir la démo Dioxus dans un nouvel onglet ↗](/demos/dioxus/index.html)
+
 
 **[object Object]**
 
 Une app Yew CSR utilisant `rs-grid-yew`. Démontre le même pipeline
 branché sur le modèle de composant et le message passing de Yew.
-Chargement de la démo Yew…rs-grid — démo Yew[Ouvrir la démo Yew dans un nouvel onglet ↗](/demos/yew/index.html)
+
+Chargement de la démo Yew…
+
+rs-grid — démo Yew[Ouvrir la démo Yew dans un nouvel onglet ↗](/demos/yew/index.html)
+
 
 ## Ce que vous regardez
 
