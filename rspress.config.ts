@@ -249,7 +249,6 @@ export default defineConfig({
         rel: 'stylesheet',
       },
     ],
-    ['script', {}, 'window.RSPRESS_THEME = "dark"'],
     // Social preview (og:title/og:description/og:type are emitted by Rspress) —
     // add the ones it does not: image, url, site_name, Twitter card.
     ['meta', { property: 'og:site_name', content: 'rs-grid' }],
