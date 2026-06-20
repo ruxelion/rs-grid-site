@@ -3652,7 +3652,7 @@ Pour les grands datasets (> 100k lignes), préférez `FnDataSource` avec paginat
 Voir [FnDataSource](/fr/data/fn-datasource.md) et [PageCache](/fr/data/page-cache.md).
 
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `c6a8a3a` · June 20, 2026. Updated automatically on every push to `main` via CI.
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `e6e0f98` · June 20, 2026. Updated automatically on every push to `main` via CI.
 
 
 
