@@ -1,0 +1,108 @@
+# API DataSource
+
+## Trait DataSource
+
+Toutes les données de lignes dans rs-grid sont accessibles via un trait commun :
+
+```rust
+pub trait DataSource: Debug {
+    fn row_count(&self) -> u64;
+    fn get_cell(&self, row: u64, col_key: &str) -> Option<String>;
+    fn get_cell_ref(&self, row: u64, col_key: &str) -> Option<Cow<'_, str>>;
+    fn clone_box(&self) -> Option<Box<dyn DataSource>>;
+
+    // Optionnel — implémentations par défaut fournies
+    fn set_cell(&mut self, row: u64, col_key: &str, value: String) {}
+    fn cell_status(&self, row: u64, col_key: &str) -> CellStatus { ... }
+}
+```
+
+Voir [Vue d'ensemble des sources de données](/fr/data/overview.md) pour l'explication
+complète, et [VecDataSource](/fr/data/vec-datasource.md),
+[FnDataSource](/fr/data/fn-datasource.md), [PageCache](/fr/data/page-cache.md) pour
+les implémentations intégrées.
+
+## CellStatus
+
+```rust
+#[non_exhaustive]
+pub enum CellStatus {
+    Ready(String),  // valeur disponible — l'afficher
+    Loading,        // page asynchrone pas encore chargée — afficher un skeleton
+    Absent,         // chargée mais pas de valeur — cellule vide
+}
+```
+
+`VecDataSource` et `FnDataSource` retournent toujours `Ready` ou `Absent`.
+`PageCacheDataSource` retourne `Loading` pendant le chargement de la page.
+
+## DataSourceMode
+
+```rust
+#[non_exhaustive]
+pub enum DataSourceMode {
+    ClientSide,  // par défaut — tri et filtrage dans le navigateur
+    ServerSide,  // tri/filtrage sont des no-ops ; géré côté serveur
+}
+```
+
+Configurer via `model.mode = DataSourceMode::ServerSide`.
+
+## RowRecord
+
+Utilisé en interne par `VecDataSource` :
+
+```rust
+pub struct RowRecord {
+    pub id: u64,
+    pub cells: HashMap<String, CellValue>,
+}
+
+impl RowRecord {
+    pub fn new(id: u64) -> Self;
+    pub fn set(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self;
+    pub fn get(&self, key: &str) -> Option<&str>;
+}
+```
+
+## Module storage
+
+Helpers `localStorage` du navigateur depuis `rs_grid_web::storage` :
+
+```rust
+pub fn get_item(key: &str) -> Option<String>;
+pub fn set_item(key: &str, value: &str) -> Result<(), String>;
+pub fn remove_item(key: &str) -> Result<(), String>;
+```
+
+Utilisation typique — persister les largeurs de colonnes au changement :
+
+```rust
+use rs_grid_web::storage;
+
+canvas.set_on_columns_changed(move || {
+    let widths = canvas.column_widths();
+    let json = serde_json::to_string(&widths).unwrap_or_default();
+    let _ = storage::set_item("my-grid-columns", &json);
+});
+```
+
+Restaurer au montage :
+
+```rust
+on_mount=Box::new(move |canvas| {
+    if let Some(json) = storage::get_item("my-grid-columns") {
+        if let Ok(widths) = serde_json::from_str::<Vec<(String, f64)>>(&json) {
+            for (col_key, width) in widths {
+                canvas.apply(GridCommand::ResizeColumn {
+                    col_idx: canvas.column_order()
+                        .iter()
+                        .position(|k| k == &col_key)
+                        .unwrap_or(0),
+                    new_width: width,
+                });
+            }
+        }
+    }
+})
+```

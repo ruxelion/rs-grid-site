@@ -4,7 +4,7 @@
 
 ```rust
 #[non_exhaustive]
-pub enum GridCommand { /* 30 variantes */ }
+pub enum GridCommand { /* 44 variantes */ }
 ```
 
 Toutes les mutations de `GridState` passent par `state.apply(GridCommand)`.
@@ -36,15 +36,30 @@ Resize { width: f64, height: f64 }
 
 ```rust
 ResizeColumn { col_idx: usize, new_width: f64 }
-AutoFitColumn { col_idx: usize, char_width: f64, header_char_width: f64, cell_padding: f64 }
+CommitColumnResize { col_idx: usize, old_width: f64, old_flex: Option<f64> }
+AutoFitColumn {
+    col_idx: usize, char_width: f64,
+    header_char_width: f64, cell_padding: f64, header_right_reserve: f64,
+}
+AutoFitAllColumns {
+    char_width: f64, header_char_width: f64,
+    cell_padding: f64, header_right_reserve: f64,
+}
 MoveColumn { from_idx: usize, to_idx: usize }
 SetPinnedColumnCount { count: usize }
 ```
 
+:::note
+`CommitColumnResize` enregistre l'ancienne taille pour l'historique d'annulation.
+Pour un redimensionnement programmatique, utiliser `ResizeColumn` directement.
+:::
+
 ### Tri et filtrage
 
 ```rust
-ToggleSort { col_key: String }
+ToggleSort { col_key: String }               // alterne asc → desc → off
+SetSort { col_key: String, dir: SortDir }    // direction explicite
+ClearSort
 SetColumnFilter { col_key: String, text: String }
 ClearAllFilters
 ```
@@ -81,12 +96,21 @@ Undo
 Redo
 ```
 
-### Données et affichage
+### Affichage
 
 ```rust
+SetHeaderHeight(f64)
+SetRowHeight(f64)
+SetShowHeader(bool)
+SetShowRowNumbers(bool)
 SetHoveredRow(Option<u64>)
-NotifyPageLoaded
-SetTotalRowCount(u64)
+```
+
+### Données côté serveur
+
+```rust
+NotifyPageLoaded       // signal qu'un chargement de page est terminé
+SetTotalRowCount(u64)  // mettre à jour le nombre total de lignes (mode serveur)
 ```
 
 ### Toggles de comportement

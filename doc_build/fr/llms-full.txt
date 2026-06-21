@@ -311,6 +311,121 @@ pub struct ColumnOffsets {
 
 
 ---
+url: /fr/api/datasource.md
+---
+
+# API DataSource
+
+## Trait DataSource
+
+Toutes les données de lignes dans rs-grid sont accessibles via un trait commun :
+
+```rust
+pub trait DataSource: Debug {
+    fn row_count(&self) -> u64;
+    fn get_cell(&self, row: u64, col_key: &str) -> Option<String>;
+    fn get_cell_ref(&self, row: u64, col_key: &str) -> Option<Cow<'_, str>>;
+    fn clone_box(&self) -> Option<Box<dyn DataSource>>;
+
+    // Optionnel — implémentations par défaut fournies
+    fn set_cell(&mut self, row: u64, col_key: &str, value: String) {}
+    fn cell_status(&self, row: u64, col_key: &str) -> CellStatus { ... }
+}
+```
+
+Voir [Vue d'ensemble des sources de données](/fr/data/overview.md) pour l'explication
+complète, et [VecDataSource](/fr/data/vec-datasource.md),
+[FnDataSource](/fr/data/fn-datasource.md), [PageCache](/fr/data/page-cache.md) pour
+les implémentations intégrées.
+
+## CellStatus
+
+```rust
+#[non_exhaustive]
+pub enum CellStatus {
+    Ready(String),  // valeur disponible — l'afficher
+    Loading,        // page asynchrone pas encore chargée — afficher un skeleton
+    Absent,         // chargée mais pas de valeur — cellule vide
+}
+```
+
+`VecDataSource` et `FnDataSource` retournent toujours `Ready` ou `Absent`.
+`PageCacheDataSource` retourne `Loading` pendant le chargement de la page.
+
+## DataSourceMode
+
+```rust
+#[non_exhaustive]
+pub enum DataSourceMode {
+    ClientSide,  // par défaut — tri et filtrage dans le navigateur
+    ServerSide,  // tri/filtrage sont des no-ops ; géré côté serveur
+}
+```
+
+Configurer via `model.mode = DataSourceMode::ServerSide`.
+
+## RowRecord
+
+Utilisé en interne par `VecDataSource` :
+
+```rust
+pub struct RowRecord {
+    pub id: u64,
+    pub cells: HashMap<String, CellValue>,
+}
+
+impl RowRecord {
+    pub fn new(id: u64) -> Self;
+    pub fn set(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self;
+    pub fn get(&self, key: &str) -> Option<&str>;
+}
+```
+
+## Module storage
+
+Helpers `localStorage` du navigateur depuis `rs_grid_web::storage` :
+
+```rust
+pub fn get_item(key: &str) -> Option<String>;
+pub fn set_item(key: &str, value: &str) -> Result<(), String>;
+pub fn remove_item(key: &str) -> Result<(), String>;
+```
+
+Utilisation typique — persister les largeurs de colonnes au changement :
+
+```rust
+use rs_grid_web::storage;
+
+canvas.set_on_columns_changed(move || {
+    let widths = canvas.column_widths();
+    let json = serde_json::to_string(&widths).unwrap_or_default();
+    let _ = storage::set_item("my-grid-columns", &json);
+});
+```
+
+Restaurer au montage :
+
+```rust
+on_mount=Box::new(move |canvas| {
+    if let Some(json) = storage::get_item("my-grid-columns") {
+        if let Ok(widths) = serde_json::from_str::<Vec<(String, f64)>>(&json) {
+            for (col_key, width) in widths {
+                canvas.apply(GridCommand::ResizeColumn {
+                    col_idx: canvas.column_order()
+                        .iter()
+                        .position(|k| k == &col_key)
+                        .unwrap_or(0),
+                    new_width: width,
+                });
+            }
+        }
+    }
+})
+```
+
+
+
+---
 url: /fr/api/grid-command.md
 ---
 
@@ -320,7 +435,7 @@ url: /fr/api/grid-command.md
 
 ```rust
 #[non_exhaustive]
-pub enum GridCommand { /* 30 variantes */ }
+pub enum GridCommand { /* 44 variantes */ }
 ```
 
 Toutes les mutations de `GridState` passent par `state.apply(GridCommand)`.
@@ -352,15 +467,30 @@ Resize { width: f64, height: f64 }
 
 ```rust
 ResizeColumn { col_idx: usize, new_width: f64 }
-AutoFitColumn { col_idx: usize, char_width: f64, header_char_width: f64, cell_padding: f64 }
+CommitColumnResize { col_idx: usize, old_width: f64, old_flex: Option<f64> }
+AutoFitColumn {
+    col_idx: usize, char_width: f64,
+    header_char_width: f64, cell_padding: f64, header_right_reserve: f64,
+}
+AutoFitAllColumns {
+    char_width: f64, header_char_width: f64,
+    cell_padding: f64, header_right_reserve: f64,
+}
 MoveColumn { from_idx: usize, to_idx: usize }
 SetPinnedColumnCount { count: usize }
 ```
 
+:::note
+`CommitColumnResize` enregistre l'ancienne taille pour l'historique d'annulation.
+Pour un redimensionnement programmatique, utiliser `ResizeColumn` directement.
+:::
+
 ### Tri et filtrage
 
 ```rust
-ToggleSort { col_key: String }
+ToggleSort { col_key: String }               // alterne asc → desc → off
+SetSort { col_key: String, dir: SortDir }    // direction explicite
+ClearSort
 SetColumnFilter { col_key: String, text: String }
 ClearAllFilters
 ```
@@ -397,12 +527,21 @@ Undo
 Redo
 ```
 
-### Données et affichage
+### Affichage
 
 ```rust
+SetHeaderHeight(f64)
+SetRowHeight(f64)
+SetShowHeader(bool)
+SetShowRowNumbers(bool)
 SetHoveredRow(Option<u64>)
-NotifyPageLoaded
-SetTotalRowCount(u64)
+```
+
+### Données côté serveur
+
+```rust
+NotifyPageLoaded       // signal qu'un chargement de page est terminé
+SetTotalRowCount(u64)  // mettre à jour le nombre total de lignes (mode serveur)
 ```
 
 ### Toggles de comportement
@@ -4263,6 +4402,449 @@ Arguments :
 
 
 ---
+url: /fr/howto/custom-theme.md
+---
+
+# Guide : Thème personnalisé
+
+rs-grid supporte deux approches de thème : les propriétés CSS personnalisées
+(recommandées pour le changement à la volée) et la struct Rust `Theme`
+(pour un contrôle statique ou programmatique).
+
+## Approche 1 — Variables CSS (recommandée)
+
+Définir les variables `--rs-grid-*` sur `:root` (ou tout ancêtre du canvas).
+Appeler `theme_from_css_vars()` pour les lire dans une struct `Theme`, puis
+la passer à la grille.
+
+### 1. Définir la palette en CSS
+
+```css
+/* light.css */
+:root {
+    --rs-grid-bg:               #ffffff;
+    --rs-grid-header-bg:        #f5f7fa;
+    --rs-grid-header-text:      #374151;
+    --rs-grid-cell-text:        #111827;
+    --rs-grid-border:           #e5e7eb;
+    --rs-grid-selection-bg:     rgba(59, 130, 246, 0.15);
+    --rs-grid-selection-border: #3b82f6;
+    --rs-grid-hover-bg:         rgba(0, 0, 0, 0.04);
+    --rs-grid-font-size:        13px;
+    --rs-grid-font-family:      "Inter", system-ui, sans-serif;
+}
+
+/* dark.css */
+:root.dark {
+    --rs-grid-bg:               #1e1e2e;
+    --rs-grid-header-bg:        #181825;
+    --rs-grid-header-text:      #cdd6f4;
+    --rs-grid-cell-text:        #cdd6f4;
+    --rs-grid-border:           #313244;
+    --rs-grid-selection-bg:     rgba(137, 180, 250, 0.2);
+    --rs-grid-selection-border: #89b4fa;
+}
+```
+
+Voir [Variables CSS](/fr/theming/css-variables.md) pour la liste complète.
+
+### 2. Construire un Theme depuis les variables CSS en Rust
+
+```rust
+use rs_grid_web::css_theme::theme_from_css_vars;
+
+let theme = theme_from_css_vars(); // lit les variables CSS du document courant
+```
+
+### 3. Passer le thème au composant
+
+```rust
+// Exemple Leptos : thème réactif qui se met à jour quand la classe CSS change
+let theme = create_memo(move |_| theme_from_css_vars());
+
+view! {
+    <GridCanvas
+        model=model
+        width="100%"
+        height="600px"
+        theme=Some(theme)
+    />
+}
+```
+
+### 4. Changer de thème à la volée
+
+```rust
+let (dark, set_dark) = create_signal(false);
+
+let theme = create_memo(move |_| {
+    let _ = dark.get(); // s'abonner
+    theme_from_css_vars()
+});
+
+let toggle = move |_| {
+    set_dark.update(|d| *d = !*d);
+    document()
+        .document_element()
+        .unwrap()
+        .class_list()
+        .toggle("dark")
+        .unwrap();
+};
+```
+
+## Approche 2 — Struct Theme en Rust
+
+Construire un `Theme` directement, sans variables CSS.
+
+```rust
+use rs_grid_scene::theme::Theme;
+
+let mut theme = Theme::light(); // ou Theme::dark()
+
+theme.bg = [255, 255, 255, 255];         // RGBA
+theme.header_bg = [245, 247, 250, 255];
+theme.selection_bg = [59, 130, 246, 38]; // alpha 15%
+theme.font_size = 13.0;
+theme.row_height = 32.0;
+
+canvas.set_theme(theme);
+```
+
+## Thèmes intégrés
+
+```rust
+use rs_grid_scene::theme::Theme;
+
+Theme::light()   // fond clair
+Theme::dark()    // fond sombre
+Theme::dimmed()  // contraste moyen
+```
+
+Voir [Thèmes intégrés](/fr/theming/built-in-themes.md) pour les valeurs de couleurs.
+
+## Style par cellule avec CellFormat::Styled
+
+```rust
+use rs_grid_core::format::{CellFormat, CellElement, CellAlign};
+use std::rc::Rc;
+
+let status_col = ColumnDef::new("status", "Statut", 120.0)
+    .with_format(CellFormat::Styled(Rc::new(|raw: &str| {
+        let class = match raw {
+            "actif"    => "text-green-600 font-semibold",
+            "inactif"  => "text-gray-400",
+            "erreur"   => "text-red-600",
+            _          => "",
+        };
+        vec![CellElement {
+            text: raw.to_string(),
+            class: class.to_string(),
+            align: CellAlign::Left,
+        }]
+    })));
+```
+
+Câbler ensuite un résolveur de classes sur le canvas :
+
+```rust
+use rs_grid_web::canvas::ClassResolver;
+use std::rc::Rc;
+
+canvas.set_class_resolver(Rc::new(|class: &str| {
+    match class {
+        c if c.contains("text-green-600") => Some([22, 163, 74, 255]),
+        c if c.contains("text-gray-400")  => Some([156, 163, 175, 255]),
+        c if c.contains("text-red-600")   => Some([220, 38, 38, 255]),
+        _ => None,
+    }
+}));
+```
+
+## Voir aussi
+
+- [Variables CSS](/fr/theming/css-variables.md)
+- [Thèmes intégrés](/fr/theming/built-in-themes.md)
+- [Formatage des cellules](/fr/features/cell-formatting.md)
+- [API Theme](/fr/api/theme.md)
+
+
+
+---
+url: /fr/howto/programmatic-selection.md
+---
+
+# Guide : Sélection programmatique
+
+Ce guide explique comment piloter la sélection depuis le code applicatif :
+sélectionner des cellules au montage, réagir aux changements de sélection et
+lire les données des lignes sélectionnées.
+
+## Sélectionner une cellule
+
+```rust
+canvas.apply(GridCommand::SelectCell(CellCoord { row: 0, col: 0 }));
+```
+
+## Sélectionner une plage (ancre + extension)
+
+```rust
+// Sélectionner de la ligne 2 col 1 à la ligne 5 col 3
+canvas.apply(GridCommand::SelectCell(CellCoord { row: 2, col: 1 }));
+canvas.apply(GridCommand::ExtendSelection(CellCoord { row: 5, col: 3 }));
+```
+
+## Sélectionner des lignes entières
+
+```rust
+canvas.apply(GridCommand::SelectRow(10));          // sélectionner la ligne 10
+canvas.apply(GridCommand::ExtendRowSelection(15)); // étendre jusqu'à la ligne 15
+```
+
+## Déplacer la sélection
+
+```rust
+// Descendre d'une ligne (équivalent ↓)
+canvas.apply(GridCommand::MoveSelection {
+    delta_row: 1,
+    delta_col: 0,
+    extend: false,
+});
+
+// Étendre vers le bas de 3 lignes (équivalent Shift+↓ trois fois)
+canvas.apply(GridCommand::MoveSelection {
+    delta_row: 3,
+    delta_col: 0,
+    extend: true,
+});
+```
+
+## Lire les indices des lignes sélectionnées
+
+```rust
+canvas.set_on_selection_changed(move || {
+    let selected: Vec<u64> = canvas.selected_row_indices();
+    log::info!("{} lignes sélectionnées : {:?}", selected.len(), selected);
+});
+```
+
+`selected_row_indices()` retourne des indices **logiques** (après tri/filtrage),
+pas des positions physiques dans la source de données.
+
+## Lire la valeur d'une cellule de la ligne sélectionnée
+
+```rust
+canvas.set_on_selection_changed(move || {
+    let selected = canvas.selected_row_indices();
+    if let Some(&first_row) = selected.first() {
+        let name = canvas.cell_at_logical(first_row, "name");
+        log::info!("Nom sélectionné : {:?}", name);
+    }
+});
+```
+
+## Effacer la sélection
+
+```rust
+canvas.apply(GridCommand::ClearSelection);
+```
+
+## Activer / désactiver la sélection globalement
+
+```rust
+canvas.apply(GridCommand::SetSelectable(false)); // désactive et vide la sélection
+canvas.apply(GridCommand::SetSelectable(true));  // réactive
+```
+
+Ou via le raccourci `GridCanvas` :
+
+```rust
+canvas.set_selectable(false);
+```
+
+## Exemple complet — sélectionner et afficher une ligne
+
+```rust
+let selected_name = create_signal(String::new());
+
+view! {
+    <GridCanvas
+        model=model
+        width="100%"
+        height="400px"
+        on_mount=Box::new(move |canvas| {
+            canvas.set_on_selection_changed(move || {
+                let rows = canvas.selected_row_indices();
+                if let Some(&row) = rows.first() {
+                    let name = canvas
+                        .cell_at_logical(row, "name")
+                        .unwrap_or_default();
+                    selected_name.set(name);
+                }
+            });
+        })
+    />
+    <p>"Sélectionné : " {selected_name}</p>
+}
+```
+
+## Voir aussi
+
+- [Sélection & Presse-papiers](/fr/features/selection-clipboard.md)
+- [API GridCommand](/fr/api/grid-command.md)
+- [Callbacks](/fr/features/callbacks.md)
+
+
+
+---
+url: /fr/howto/server-pagination.md
+---
+
+# Guide : Pagination côté serveur
+
+Ce guide montre comment connecter rs-grid à une API REST qui pagine les données
+côté serveur. La grille charge les pages à la demande et affiche des cellules
+squelettes pendant le chargement.
+
+## Prérequis
+
+Ajouter la crate web dans `Cargo.toml` :
+
+```toml
+rs-grid-web  = { git = "https://github.com/ruxelion/rs-grid", tag = "rs-grid-core-v0.1.3" }
+```
+
+## 1. Construire un GridModel en mode serveur
+
+```rust
+use rs_grid_core::{
+    column::ColumnDef,
+    model::{GridModel, DataSourceMode},
+};
+use rs_grid_web::canvas::fetcher::PageCacheDataSource;
+
+let columns = vec![
+    ColumnDef::new("id",   "ID",    60.0),
+    ColumnDef::new("name", "Nom",  200.0),
+    ColumnDef::new("email","Email",250.0),
+];
+
+// Valeur provisoire — mise à jour après la première requête
+let page_cache = PageCacheDataSource::new(0, columns.len());
+
+let mut model = GridModel::with_data_source(
+    columns,
+    Box::new(page_cache.clone()),
+    32.0,
+    40.0,
+);
+model.mode = DataSourceMode::ServerSide;
+```
+
+## 2. Monter la grille et activer le chargement asynchrone
+
+```rust
+use rs_grid_web::canvas::fetcher::{FetchConfig, PageFetchRequest, PageFetchResponse};
+use rs_grid_core::row::RowRecord;
+
+view! {
+    <GridCanvas
+        model=model
+        width="100%"
+        height="600px"
+        on_mount=Box::new(move |canvas| {
+            canvas.enable_async_fetch(
+                page_cache,
+                FetchConfig {
+                    build_url: Box::new(|req: &PageFetchRequest| {
+                        format!(
+                            "/api/users?page={}&size={}",
+                            req.page_num, req.page_size
+                        )
+                    }),
+                    parse_response: Box::new(|js_val| {
+                        // Désérialiser la réponse JSON de votre API
+                        let obj = js_val.dyn_into::<js_sys::Object>()
+                            .map_err(|_| "Pas un objet".to_string())?;
+                        let total = js_sys::Reflect::get(&obj, &"total".into())
+                            .ok()
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(0.0) as u64;
+                        let items_val = js_sys::Reflect::get(&obj, &"items".into())
+                            .map_err(|_| "Champ items absent".to_string())?;
+                        let items = js_sys::Array::from(&items_val);
+                        let rows: Vec<RowRecord> = (0..items.length())
+                            .filter_map(|i| {
+                                let item = items.get(i).dyn_into::<js_sys::Object>().ok()?;
+                                let mut r = RowRecord::new(i as u64);
+                                for key in ["id", "name", "email"] {
+                                    let val = js_sys::Reflect::get(&item, &key.into())
+                                        .ok()
+                                        .and_then(|v| v.as_string())
+                                        .unwrap_or_default();
+                                    r.set(key, val);
+                                }
+                                Some(r)
+                            })
+                            .collect();
+                        Ok(PageFetchResponse { rows, total_rows: total })
+                    }),
+                    buffer_pages: 2,
+                },
+            );
+        })
+    />
+}
+```
+
+## 3. Format de réponse attendu
+
+```json
+{
+  "total": 50000,
+  "items": [
+    { "id": "1", "name": "Alice", "email": "alice@example.com" },
+    { "id": "2", "name": "Bob",   "email": "bob@example.com" }
+  ]
+}
+```
+
+## Fonctionnement
+
+- La grille calcule quelles lignes sont dans le viewport.
+- Pour chaque page non vue, elle appelle `build_url` et la charge.
+- Pendant le chargement, les cellules affichent `CellStatus::Loading` (squelette).
+- À l'arrivée de la réponse, `parse_response` la convertit en `PageFetchResponse`.
+- La grille appelle `GridCommand::NotifyPageLoaded` en interne et se re-rend.
+
+## Tri et filtrage côté serveur
+
+En mode `ServerSide`, les commandes de tri et de filtrage mettent à jour
+`GridState` mais ne réordonnent **pas** les lignes localement. Votre `build_url`
+reçoit le tri et les filtres actuels via `PageFetchRequest` :
+
+```rust
+build_url: Box::new(|req: &PageFetchRequest| {
+    let mut url = format!("/api/users?page={}&size={}", req.page_num, req.page_size);
+    if let Some(sort) = &req.sort {
+        url += &format!("&sort={}&dir={:?}", sort.col_key, sort.dir);
+    }
+    for (col_key, text) in &req.filters {
+        url += &format!("&filter[{}]={}", col_key, text);
+    }
+    url
+}),
+```
+
+## Voir aussi
+
+- [Source de données PageCache](/fr/data/page-cache.md)
+- [API DataSource](/fr/api/datasource.md)
+- [Callbacks et persistance](/fr/features/callbacks.md)
+
+
+
+---
 url: /fr/index.md
 ---
 
@@ -4277,9 +4859,9 @@ Un data grid qui ne ralentit jamais. Parcourez des millions de lignes aussi flui
 
 ∞lignes, zéro latence
 
-<0 µspar frame à 60fps
+<89 µspar frame à 60fps
 
- nshit-test (1 quadrillion de lignes)
+18 nshit-test (1 quadrillion de lignes)
 
 100% Rustcompilé en WASM
 

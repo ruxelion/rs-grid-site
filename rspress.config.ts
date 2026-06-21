@@ -86,12 +86,24 @@ const sidebarEN = [
     ],
   },
   {
+    text: 'howTo',
+    items: [
+      { text: 'Server-side Pagination', link: '/howto/server-pagination' },
+      {
+        text: 'Programmatic Selection',
+        link: '/howto/programmatic-selection',
+      },
+      { text: 'Custom Theme', link: '/howto/custom-theme' },
+    ],
+  },
+  {
     text: 'apiReference',
     items: [
       { text: 'GridState', link: '/api/grid-state' },
       { text: 'GridCommand', link: '/api/grid-command' },
       { text: 'GridModel', link: '/api/grid-model' },
       { text: 'ColumnDef', link: '/api/column-def' },
+      { text: 'DataSource', link: '/api/datasource' },
       { text: 'Theme', link: '/api/theme' },
       { text: 'ScenePrimitive', link: '/api/scene-primitive' },
     ],
@@ -188,12 +200,27 @@ const sidebarFR = [
     ],
   },
   {
+    text: 'howTo',
+    items: [
+      {
+        text: 'Pagination côté serveur',
+        link: '/fr/howto/server-pagination',
+      },
+      {
+        text: 'Sélection programmatique',
+        link: '/fr/howto/programmatic-selection',
+      },
+      { text: 'Thème personnalisé', link: '/fr/howto/custom-theme' },
+    ],
+  },
+  {
     text: 'apiReference',
     items: [
       { text: 'GridState', link: '/fr/api/grid-state' },
       { text: 'GridCommand', link: '/fr/api/grid-command' },
       { text: 'GridModel', link: '/fr/api/grid-model' },
       { text: 'ColumnDef', link: '/fr/api/column-def' },
+      { text: 'DataSource', link: '/fr/api/datasource' },
       { text: 'Theme', link: '/fr/api/theme' },
       { text: 'ScenePrimitive', link: '/fr/api/scene-primitive' },
     ],

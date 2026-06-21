@@ -1,0 +1,122 @@
+---
+title: "Guide : Sélection programmatique"
+description: Sélectionner des cellules, lignes et plages via GridCommand, et lire l'état de sélection.
+---
+
+Ce guide explique comment piloter la sélection depuis le code applicatif :
+sélectionner des cellules au montage, réagir aux changements de sélection et
+lire les données des lignes sélectionnées.
+
+## Sélectionner une cellule
+
+```rust
+canvas.apply(GridCommand::SelectCell(CellCoord { row: 0, col: 0 }));
+```
+
+## Sélectionner une plage (ancre + extension)
+
+```rust
+// Sélectionner de la ligne 2 col 1 à la ligne 5 col 3
+canvas.apply(GridCommand::SelectCell(CellCoord { row: 2, col: 1 }));
+canvas.apply(GridCommand::ExtendSelection(CellCoord { row: 5, col: 3 }));
+```
+
+## Sélectionner des lignes entières
+
+```rust
+canvas.apply(GridCommand::SelectRow(10));          // sélectionner la ligne 10
+canvas.apply(GridCommand::ExtendRowSelection(15)); // étendre jusqu'à la ligne 15
+```
+
+## Déplacer la sélection
+
+```rust
+// Descendre d'une ligne (équivalent ↓)
+canvas.apply(GridCommand::MoveSelection {
+    delta_row: 1,
+    delta_col: 0,
+    extend: false,
+});
+
+// Étendre vers le bas de 3 lignes (équivalent Shift+↓ trois fois)
+canvas.apply(GridCommand::MoveSelection {
+    delta_row: 3,
+    delta_col: 0,
+    extend: true,
+});
+```
+
+## Lire les indices des lignes sélectionnées
+
+```rust
+canvas.set_on_selection_changed(move || {
+    let selected: Vec<u64> = canvas.selected_row_indices();
+    log::info!("{} lignes sélectionnées : {:?}", selected.len(), selected);
+});
+```
+
+`selected_row_indices()` retourne des indices **logiques** (après tri/filtrage),
+pas des positions physiques dans la source de données.
+
+## Lire la valeur d'une cellule de la ligne sélectionnée
+
+```rust
+canvas.set_on_selection_changed(move || {
+    let selected = canvas.selected_row_indices();
+    if let Some(&first_row) = selected.first() {
+        let name = canvas.cell_at_logical(first_row, "name");
+        log::info!("Nom sélectionné : {:?}", name);
+    }
+});
+```
+
+## Effacer la sélection
+
+```rust
+canvas.apply(GridCommand::ClearSelection);
+```
+
+## Activer / désactiver la sélection globalement
+
+```rust
+canvas.apply(GridCommand::SetSelectable(false)); // désactive et vide la sélection
+canvas.apply(GridCommand::SetSelectable(true));  // réactive
+```
+
+Ou via le raccourci `GridCanvas` :
+
+```rust
+canvas.set_selectable(false);
+```
+
+## Exemple complet — sélectionner et afficher une ligne
+
+```rust
+let selected_name = create_signal(String::new());
+
+view! {
+    <GridCanvas
+        model=model
+        width="100%"
+        height="400px"
+        on_mount=Box::new(move |canvas| {
+            canvas.set_on_selection_changed(move || {
+                let rows = canvas.selected_row_indices();
+                if let Some(&row) = rows.first() {
+                    let name = canvas
+                        .cell_at_logical(row, "name")
+                        .unwrap_or_default();
+                    selected_name.set(name);
+                }
+            });
+        })
+    />
+    <p>"Sélectionné : " {selected_name}</p>
+}
+```
+
+## Voir aussi
+
+- [Sélection & Presse-papiers](/fr/features/selection-clipboard)
+- [API GridCommand](/fr/api/grid-command)
+- [Callbacks](/fr/features/callbacks)

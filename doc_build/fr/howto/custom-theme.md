@@ -1,0 +1,162 @@
+# Guide : Thème personnalisé
+
+rs-grid supporte deux approches de thème : les propriétés CSS personnalisées
+(recommandées pour le changement à la volée) et la struct Rust `Theme`
+(pour un contrôle statique ou programmatique).
+
+## Approche 1 — Variables CSS (recommandée)
+
+Définir les variables `--rs-grid-*` sur `:root` (ou tout ancêtre du canvas).
+Appeler `theme_from_css_vars()` pour les lire dans une struct `Theme`, puis
+la passer à la grille.
+
+### 1. Définir la palette en CSS
+
+```css
+/* light.css */
+:root {
+    --rs-grid-bg:               #ffffff;
+    --rs-grid-header-bg:        #f5f7fa;
+    --rs-grid-header-text:      #374151;
+    --rs-grid-cell-text:        #111827;
+    --rs-grid-border:           #e5e7eb;
+    --rs-grid-selection-bg:     rgba(59, 130, 246, 0.15);
+    --rs-grid-selection-border: #3b82f6;
+    --rs-grid-hover-bg:         rgba(0, 0, 0, 0.04);
+    --rs-grid-font-size:        13px;
+    --rs-grid-font-family:      "Inter", system-ui, sans-serif;
+}
+
+/* dark.css */
+:root.dark {
+    --rs-grid-bg:               #1e1e2e;
+    --rs-grid-header-bg:        #181825;
+    --rs-grid-header-text:      #cdd6f4;
+    --rs-grid-cell-text:        #cdd6f4;
+    --rs-grid-border:           #313244;
+    --rs-grid-selection-bg:     rgba(137, 180, 250, 0.2);
+    --rs-grid-selection-border: #89b4fa;
+}
+```
+
+Voir [Variables CSS](/fr/theming/css-variables.md) pour la liste complète.
+
+### 2. Construire un Theme depuis les variables CSS en Rust
+
+```rust
+use rs_grid_web::css_theme::theme_from_css_vars;
+
+let theme = theme_from_css_vars(); // lit les variables CSS du document courant
+```
+
+### 3. Passer le thème au composant
+
+```rust
+// Exemple Leptos : thème réactif qui se met à jour quand la classe CSS change
+let theme = create_memo(move |_| theme_from_css_vars());
+
+view! {
+    <GridCanvas
+        model=model
+        width="100%"
+        height="600px"
+        theme=Some(theme)
+    />
+}
+```
+
+### 4. Changer de thème à la volée
+
+```rust
+let (dark, set_dark) = create_signal(false);
+
+let theme = create_memo(move |_| {
+    let _ = dark.get(); // s'abonner
+    theme_from_css_vars()
+});
+
+let toggle = move |_| {
+    set_dark.update(|d| *d = !*d);
+    document()
+        .document_element()
+        .unwrap()
+        .class_list()
+        .toggle("dark")
+        .unwrap();
+};
+```
+
+## Approche 2 — Struct Theme en Rust
+
+Construire un `Theme` directement, sans variables CSS.
+
+```rust
+use rs_grid_scene::theme::Theme;
+
+let mut theme = Theme::light(); // ou Theme::dark()
+
+theme.bg = [255, 255, 255, 255];         // RGBA
+theme.header_bg = [245, 247, 250, 255];
+theme.selection_bg = [59, 130, 246, 38]; // alpha 15%
+theme.font_size = 13.0;
+theme.row_height = 32.0;
+
+canvas.set_theme(theme);
+```
+
+## Thèmes intégrés
+
+```rust
+use rs_grid_scene::theme::Theme;
+
+Theme::light()   // fond clair
+Theme::dark()    // fond sombre
+Theme::dimmed()  // contraste moyen
+```
+
+Voir [Thèmes intégrés](/fr/theming/built-in-themes.md) pour les valeurs de couleurs.
+
+## Style par cellule avec CellFormat::Styled
+
+```rust
+use rs_grid_core::format::{CellFormat, CellElement, CellAlign};
+use std::rc::Rc;
+
+let status_col = ColumnDef::new("status", "Statut", 120.0)
+    .with_format(CellFormat::Styled(Rc::new(|raw: &str| {
+        let class = match raw {
+            "actif"    => "text-green-600 font-semibold",
+            "inactif"  => "text-gray-400",
+            "erreur"   => "text-red-600",
+            _          => "",
+        };
+        vec![CellElement {
+            text: raw.to_string(),
+            class: class.to_string(),
+            align: CellAlign::Left,
+        }]
+    })));
+```
+
+Câbler ensuite un résolveur de classes sur le canvas :
+
+```rust
+use rs_grid_web::canvas::ClassResolver;
+use std::rc::Rc;
+
+canvas.set_class_resolver(Rc::new(|class: &str| {
+    match class {
+        c if c.contains("text-green-600") => Some([22, 163, 74, 255]),
+        c if c.contains("text-gray-400")  => Some([156, 163, 175, 255]),
+        c if c.contains("text-red-600")   => Some([220, 38, 38, 255]),
+        _ => None,
+    }
+}));
+```
+
+## Voir aussi
+
+- [Variables CSS](/fr/theming/css-variables.md)
+- [Thèmes intégrés](/fr/theming/built-in-themes.md)
+- [Formatage des cellules](/fr/features/cell-formatting.md)
+- [API Theme](/fr/api/theme.md)

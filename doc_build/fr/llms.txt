@@ -9,6 +9,7 @@
 ## Others
 
 - [API ColumnDef](/fr/api/column-def.md): Définition de colonne, formats de cellule et éditeurs de cellule.
+- [API DataSource](/fr/api/datasource.md): Trait DataSource, enum CellStatus et module storage — référence complète.
 - [API GridCommand](/fr/api/grid-command.md): Référence complète de toutes les variantes de GridCommand.
 - [API GridModel](/fr/api/grid-model.md): Référence complète de la struct GridModel.
 - [API GridState](/fr/api/grid-state.md): Référence complète de la struct GridState.
@@ -47,6 +48,9 @@
 - [Tri](/fr/features/sorting.md): Tri par colonne avec les états croissant, décroissant et aucun.
 - [Annuler et Retablir](/fr/features/undo-redo.md): Actions reversibles avec une pile d'historique a capacite fixe.
 - [Validation](/fr/features/validation.md): Validation par colonne avec CellValidator — rejet des saisies invalides avant leur enregistrement.
+- [Guide : Thème personnalisé](/fr/howto/custom-theme.md): Appliquer un thème visuel personnalisé à rs-grid via les variables CSS ou la struct Theme.
+- [Guide : Sélection programmatique](/fr/howto/programmatic-selection.md): Sélectionner des cellules, lignes et plages via GridCommand, et lire l'état de sélection.
+- [Guide : Pagination côté serveur](/fr/howto/server-pagination.md): Charger de grands jeux de données depuis un serveur avec PageCacheDataSource et FetchConfig.
 - [Installation](/fr/installation.md): Configurer votre toolchain Rust et ajouter rs-grid a votre projet.
 - [Renderer personnalisé](/fr/integrations/custom-renderer.md): Créer un nouveau backend de rendu en consommant les primitives SceneFrame.
 - [Intégration Framework](/fr/integrations/frameworks.md): Intégrer rs-grid avec Leptos ou JavaScript vanilla.

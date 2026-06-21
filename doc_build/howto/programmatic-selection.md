@@ -1,0 +1,142 @@
+# 
+
+***
+
+title: How-To: Programmatic Selection
+description: Select cells, rows, and ranges via GridCommand, and read selection state back.
+-------------------------------------------------------------------------------------------
+
+This guide covers how to drive selection from application code — selecting
+cells on mount, reacting to selection changes, and reading selected row data.
+
+## Select a cell programmatically
+
+Use `GridCommand::SelectCell` to move the selection to a specific cell:
+
+```rust
+canvas.apply(GridCommand::SelectCell(CellCoord { row: 0, col: 0 }));
+```
+
+## Select a range (anchor + extend)
+
+```rust
+// Select from row 2 col 1 to row 5 col 3
+canvas.apply(GridCommand::SelectCell(CellCoord { row: 2, col: 1 }));
+canvas.apply(GridCommand::ExtendSelection(CellCoord { row: 5, col: 3 }));
+```
+
+## Select entire rows
+
+```rust
+canvas.apply(GridCommand::SelectRow(10));          // select row 10
+canvas.apply(GridCommand::ExtendRowSelection(15)); // extend to row 15
+```
+
+## Move selection with keyboard-like delta
+
+```rust
+// Move down 1 row (like pressing ↓)
+canvas.apply(GridCommand::MoveSelection {
+    delta_row: 1,
+    delta_col: 0,
+    extend: false,
+});
+
+// Extend down 3 rows (like Shift+↓ three times)
+canvas.apply(GridCommand::MoveSelection {
+    delta_row: 3,
+    delta_col: 0,
+    extend: true,
+});
+```
+
+## Read selected row indices
+
+Inside `on_selection_changed` or anywhere after a mutation:
+
+```rust
+canvas.set_on_selection_changed(move || {
+    let selected: Vec<u64> = canvas.selected_row_indices();
+    log::info!("Selected {} rows: {:?}", selected.len(), selected);
+});
+```
+
+`selected_row_indices()` returns **logical** row indices (after sort/filter),
+not physical positions in the data source.
+
+## Read a cell value from the selected row
+
+```rust
+canvas.set_on_selection_changed(move || {
+    let selected = canvas.selected_row_indices();
+    if let Some(&first_row) = selected.first() {
+        let name = canvas.cell_at_logical(first_row, "name");
+        log::info!("Selected name: {:?}", name);
+    }
+});
+```
+
+## Clear the selection
+
+```rust
+canvas.apply(GridCommand::ClearSelection);
+```
+
+## Enable / disable selection globally
+
+```rust
+canvas.apply(GridCommand::SetSelectable(false)); // disables selection; clears it
+canvas.apply(GridCommand::SetSelectable(true));  // re-enables
+```
+
+Or use the `GridCanvas` shorthand:
+
+```rust
+canvas.set_selectable(false);
+```
+
+## Copy selection as TSV
+
+```rust
+use rs_grid_core::commands::CommandOutput;
+
+let output = canvas.state.apply(GridCommand::CopySelection);
+if let CommandOutput::CopyText(tsv) = output {
+    // write `tsv` to the system clipboard
+}
+```
+
+In a browser context the Canvas renderer handles clipboard writes
+automatically when the user presses Ctrl+C.
+
+## Full example — select and display row on click
+
+```rust
+let selected_name = create_signal(String::new());
+
+view! {
+    <GridCanvas
+        model=model
+        width="100%"
+        height="400px"
+        on_mount=Box::new(move |canvas| {
+            canvas.set_on_selection_changed(move || {
+                let rows = canvas.selected_row_indices();
+                if let Some(&row) = rows.first() {
+                    let name = canvas
+                        .cell_at_logical(row, "name")
+                        .unwrap_or_default();
+                    selected_name.set(name);
+                }
+            });
+        })
+    />
+    <p>"Selected: " {selected_name}</p>
+}
+```
+
+## Related
+
+- [Selection & Clipboard](/features/selection-clipboard.md)
+- [GridCommand API](/api/grid-command.md)
+- [Callbacks](/features/callbacks.md)
