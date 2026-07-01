@@ -68,9 +68,19 @@ ClearAllFilters
 
 ```rust
 StartEdit { row: u64, col_key: String }
+ValidateEdit { value: String }
 CommitEdit { row: u64, col_key: String, value: String }
 CancelEdit
+SetInvalidEditMode(InvalidEditMode)
 ```
+
+:::note
+`ValidateEdit` revérifie la valeur en cours d'édition **sans valider** —
+un no-op sans édition active, et ça ne crée aucune entrée d'annulation.
+`rs-grid-web` le déclenche à chaque frappe pour un retour live. Voir
+[Validation](/fr/features/validation.md) pour `ValidationRule` et
+`InvalidEditMode`.
+:::
 
 ### Presse-papiers
 
@@ -129,6 +139,7 @@ pub enum CommandOutput {
     None,
     CopyText(String),
     CopyError(CopyError),
+    ValidationError { row: u64, col_key: String, message: String },
 }
 
 #[non_exhaustive]
@@ -138,8 +149,9 @@ pub enum CopyError {
 }
 ```
 
-| Commande          | Résultat                       |
-| ----------------- | ------------------------------ |
-| `CopySelection`   | `CopyText(tsv)` ou `CopyError` |
-| `CutSelection`    | `CopyText(tsv)` ou `CopyError` |
-| Toutes les autres | `None`                         |
+| Commande              | Résultat                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `CopySelection`       | `CopyText(tsv)` ou `CopyError`                                                                         |
+| `CutSelection`        | `CopyText(tsv)` ou `CopyError`                                                                         |
+| `CommitEdit` (rejeté) | `ValidationError { row, col_key, message }` — déclenché pour `InvalidEditMode::Revert` comme `::Block` |
+| Toutes les autres     | `None`                                                                                                 |

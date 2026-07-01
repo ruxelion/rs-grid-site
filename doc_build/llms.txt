@@ -2,7 +2,7 @@
 
 > High-performance Rust/WASM data grid engine for the web
 
-## Docs
+## nav.docs
 
 - [Getting Started](/getting-started.md): Install rs-grid and render your first data grid.
 
@@ -47,7 +47,7 @@
 - [Selection & Clipboard](/features/selection-clipboard.md): Copy, cut, and paste operations with TSV format.
 - [Sorting](/features/sorting.md): Column sorting with ascending, descending, and none states.
 - [Undo & Redo](/features/undo-redo.md): Reversible actions with a fixed-capacity history stack.
-- [Validation](/features/validation.md): Per-column cell validation with CellValidator — reject invalid edits before they are committed.
+- [Validation](/features/validation.md): Declarative per-column validation rules, block-or-revert policy, and live per-keystroke feedback for edits.
 - [](/howto/custom-theme.md)
 - [](/howto/programmatic-selection.md)
 - [](/howto/server-pagination.md)

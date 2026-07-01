@@ -2,19 +2,20 @@
 
 ## Overview
 
-`WebGridCanvas` exposes 4 callbacks for reacting to user-driven mutations.
+`WebGridCanvas` exposes callbacks for reacting to user-driven mutations.
 They're the primitives you need to persist grid state to localStorage,
 a backend, or any external sink. The grid itself never persists — that
 choice is left to the caller.
 
 ## Available callbacks
 
-| Method                     | Triggers when                                 |
-| -------------------------- | --------------------------------------------- |
-| `set_on_change`            | A `CommitEdit` or `PasteAt` mutates cell data |
-| `set_on_columns_changed`   | Layout changes: width / order / pin count     |
-| `set_on_validation_error`  | A column `validator` rejected an edit         |
-| `set_on_cell_button_click` | User clicked an in-cell button                |
+| Method                            | Triggers when                                                                                                                                 |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `set_on_change`                   | A `CommitEdit` or `PasteAt` mutates cell data                                                                                                 |
+| `set_on_columns_changed`          | Layout changes: width / order / pin count                                                                                                     |
+| `set_on_validation_error`         | A `CommitEdit` was rejected by validation                                                                                                     |
+| `set_on_validation_state_changed` | Live validation state changes on every `StartEdit` / `ValidateEdit` / `CommitEdit` / `CancelEdit` — see [Validation](/features/validation.md) |
+| `set_on_cell_button_click`        | User clicked an in-cell button                                                                                                                |
 
 ## Persisting column layout
 

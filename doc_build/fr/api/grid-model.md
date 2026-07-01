@@ -20,29 +20,31 @@ pub struct GridModel {
     pub editable: bool,
     pub selectable: bool,
     pub column_reorderable: bool,
+    pub invalid_edit_mode: InvalidEditMode,
 }
 ```
 
 ## Champs
 
-| Champ                | Type                             | Défaut       | Description                                                      |
-| -------------------- | -------------------------------- | ------------ | ---------------------------------------------------------------- |
-| `columns`            | `Vec<ColumnDef>`                 | —            | Définitions de colonnes ordonnées                                |
-| `data`               | `Box<dyn DataSource>`            | —            | Fournisseur de données sous-jacent                               |
-| `row_height`         | `f64`                            | —            | Hauteur des lignes de données (px logiques)                      |
-| `header_height`      | `f64`                            | —            | Hauteur de la ligne d'en-tête (px logiques)                      |
-| `column_offsets`     | `ColumnOffsets`                  | calculé      | Offsets de bord gauche précalculés                               |
-| `patches`            | `HashMap<(u64, String), String>` | vide         | Surcharges de valeurs de cellules                                |
-| `row_number_width`   | `f64`                            | auto         | Largeur du gutter (auto selon le nombre de lignes)               |
-| `sort_order`         | `Vec<u64>`                       | vide         | Correspondance affichage → ligne physique                        |
-| `pinned_count`       | `usize`                          | `0`          | Nombre de colonnes épinglées en tête                             |
-| `filters`            | `HashMap<String, String>`        | vide         | Filtres texte par colonne                                        |
-| `filtered_indices`   | `Vec<u64>`                       | vide         | Indices physiques des lignes filtrées                            |
-| `mode`               | `DataSourceMode`                 | `ClientSide` | Données côté client ou côté serveur                              |
-| `scrollbar_size`     | `f64`                            | `14.0`       | Espace réservé à la scrollbar                                    |
-| `editable`           | `bool`                           | `true`       | Édition inline globale (le drapeau par colonne s'applique aussi) |
-| `selectable`         | `bool`                           | `true`       | Sélection globale ; vide la sélection si passée à `false`        |
-| `column_reorderable` | `bool`                           | `true`       | Drag-to-reorder des en-têtes. `MoveColumn` fonctionne toujours   |
+| Champ                | Type                             | Défaut       | Description                                                                                                      |
+| -------------------- | -------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `columns`            | `Vec<ColumnDef>`                 | —            | Définitions de colonnes ordonnées                                                                                |
+| `data`               | `Box<dyn DataSource>`            | —            | Fournisseur de données sous-jacent                                                                               |
+| `row_height`         | `f64`                            | —            | Hauteur des lignes de données (px logiques)                                                                      |
+| `header_height`      | `f64`                            | —            | Hauteur de la ligne d'en-tête (px logiques)                                                                      |
+| `column_offsets`     | `ColumnOffsets`                  | calculé      | Offsets de bord gauche précalculés                                                                               |
+| `patches`            | `HashMap<(u64, String), String>` | vide         | Surcharges de valeurs de cellules                                                                                |
+| `row_number_width`   | `f64`                            | auto         | Largeur du gutter (auto selon le nombre de lignes)                                                               |
+| `sort_order`         | `Vec<u64>`                       | vide         | Correspondance affichage → ligne physique                                                                        |
+| `pinned_count`       | `usize`                          | `0`          | Nombre de colonnes épinglées en tête                                                                             |
+| `filters`            | `HashMap<String, String>`        | vide         | Filtres texte par colonne                                                                                        |
+| `filtered_indices`   | `Vec<u64>`                       | vide         | Indices physiques des lignes filtrées                                                                            |
+| `mode`               | `DataSourceMode`                 | `ClientSide` | Données côté client ou côté serveur                                                                              |
+| `scrollbar_size`     | `f64`                            | `14.0`       | Espace réservé à la scrollbar                                                                                    |
+| `editable`           | `bool`                           | `true`       | Édition inline globale (le drapeau par colonne s'applique aussi)                                                 |
+| `selectable`         | `bool`                           | `true`       | Sélection globale ; vide la sélection si passée à `false`                                                        |
+| `column_reorderable` | `bool`                           | `true`       | Drag-to-reorder des en-têtes. `MoveColumn` fonctionne toujours                                                   |
+| `invalid_edit_mode`  | `InvalidEditMode`                | `Revert`     | Politique appliquée quand un `CommitEdit` échoue à la validation — voir [Validation](/fr/features/validation.md) |
 
 ## Constructeurs
 
@@ -88,6 +90,7 @@ impl GridModelBuilder {
     pub fn editable(self, v: bool) -> Self;         // defaut true
     pub fn selectable(self, v: bool) -> Self;       // defaut true
     pub fn column_reorderable(self, v: bool) -> Self; // defaut true
+    pub fn invalid_edit_mode(self, m: InvalidEditMode) -> Self; // defaut Revert
     pub fn build(self) -> GridModel;
 }
 ```
@@ -113,3 +116,15 @@ pub enum DataSourceMode {
     ServerSide,  // tri/filtre délégué au serveur
 }
 ```
+
+## InvalidEditMode
+
+```rust
+pub enum InvalidEditMode {
+    Revert,  // termine la session d'édition, revient à la valeur précédente (défaut)
+    Block,   // garde la session d'édition ouverte avec l'erreur attachée
+}
+```
+
+Basculer à l'exécution avec `GridCommand::SetInvalidEditMode`. Voir
+[Validation](/fr/features/validation.md) pour le comportement complet.

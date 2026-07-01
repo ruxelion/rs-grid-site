@@ -107,3 +107,11 @@ Voir [Annuler et Rétablir](/fr/features/undo-redo.md) pour plus de détails.
 Même `FnDataSource` (qui n'a pas de `set_cell`) prend en charge l'édition —
 la nouvelle valeur est stockée dans `GridModel::patches`, qui remplace la
 source de données pour cette cellule.
+
+## Validation
+
+`CommitEdit` (ainsi que la commande live `ValidateEdit` déclenchée à chaque
+frappe) passent par une validation par colonne avant que la valeur soit
+acceptée. Voir [Validation](/fr/features/validation.md) pour les règles
+déclaratives, la politique bloquer-ou-annuler, et les hooks d'interface
+pour le retour live.

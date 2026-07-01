@@ -187,17 +187,19 @@ pub struct ColumnDef {
     pub format: Option<CellFormat>,
     pub editor: Option<CellEditor>,
     pub validator: Option<CellValidator>,
+    pub rules: Vec<ValidationRule>,
 }
 ```
 
-| Field       | Type                    | Description                                         |
-| ----------- | ----------------------- | --------------------------------------------------- |
-| `key`       | `String`                | Unique identifier, used to look up cell values      |
-| `label`     | `String`                | Display text in the column header                   |
-| `width`     | `f64`                   | Width in logical pixels                             |
-| `format`    | `Option<CellFormat>`    | Display format (`None` = raw text)                  |
-| `editor`    | `Option<CellEditor>`    | Editor type (`None` = default text input)           |
-| `validator` | `Option<CellValidator>` | Optional validator called before committing an edit |
+| Field       | Type                    | Description                                                                                                                |
+| ----------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `key`       | `String`                | Unique identifier, used to look up cell values                                                                             |
+| `label`     | `String`                | Display text in the column header                                                                                          |
+| `width`     | `f64`                   | Width in logical pixels                                                                                                    |
+| `format`    | `Option<CellFormat>`    | Display format (`None` = raw text)                                                                                         |
+| `editor`    | `Option<CellEditor>`    | Editor type (`None` = default text input)                                                                                  |
+| `validator` | `Option<CellValidator>` | Legacy validator, kept for backward compatibility. Prefer `rules` for new code — see [Validation](/features/validation.md) |
+| `rules`     | `Vec<ValidationRule>`   | Declarative validation rules, checked in order before `validator`                                                          |
 
 ### Constructor
 
@@ -272,6 +274,46 @@ CellValidator::new(|v| {
 | `validate(value: &str)` | Run the validator; returns `Ok(())` or `Err(message)` |
 
 See [Validation](/features/validation.md) for the full feature guide.
+
+## ValidationRule
+
+```rust
+#[non_exhaustive]
+pub enum ValidationRule {
+    Required,
+    MinLength(usize),
+    MaxLength(usize),
+    Range(f64, f64),
+    OneOf(Vec<String>),
+    Custom(CellValidator),
+}
+```
+
+Declarative rules attached to `ColumnDef::rules`, checked **in order,
+first failure wins**, before the legacy `validator`.
+
+### Builder sugar on `ColumnDef`
+
+| Method                                      | Pushes                            | Returns |
+| ------------------------------------------- | --------------------------------- | ------- |
+| `.required()`                               | `ValidationRule::Required`        | `Self`  |
+| `.with_min_length(min: usize)`              | `ValidationRule::MinLength(min)`  | `Self`  |
+| `.with_max_length(max: usize)`              | `ValidationRule::MaxLength(max)`  | `Self`  |
+| `.with_range(min: f64, max: f64)`           | `ValidationRule::Range(min, max)` | `Self`  |
+| `.with_allowed_values(values: Vec<String>)` | `ValidationRule::OneOf(values)`   | `Self`  |
+| `.with_rules(rules: Vec<ValidationRule>)`   | replaces `rules` entirely         | `Self`  |
+
+### `ColumnDef::validate_value`
+
+```rust
+pub fn validate_value(&self, value: &str) -> Result<(), String>
+```
+
+Runs `rules` in order, then `validator` if all rules passed. Returns the
+first failure's message, if any.
+
+See [Validation](/features/validation.md) for `InvalidEditMode` and live
+per-keystroke feedback.
 
 ## CellEditor
 
@@ -499,9 +541,19 @@ ClearAllFilters
 
 ```rust
 StartEdit { row: u64, col_key: String }
+ValidateEdit { value: String }
 CommitEdit { row: u64, col_key: String, value: String }
 CancelEdit
+SetInvalidEditMode(InvalidEditMode)
 ```
+
+:::note
+`ValidateEdit` re-checks the in-progress edit's pending value **without
+committing** — a no-op without an active edit, and it creates no undo entry.
+`rs-grid-web` dispatches it on every keystroke for live feedback. See
+[Validation](/features/validation.md) for `ValidationRule` and
+`InvalidEditMode`.
+:::
 
 ### Clipboard
 
@@ -560,6 +612,7 @@ pub enum CommandOutput {
     None,
     CopyText(String),
     CopyError(CopyError),
+    ValidationError { row: u64, col_key: String, message: String },
 }
 
 #[non_exhaustive]
@@ -569,11 +622,12 @@ pub enum CopyError {
 }
 ```
 
-| Command         | Output                         |
-| --------------- | ------------------------------ |
-| `CopySelection` | `CopyText(tsv)` or `CopyError` |
-| `CutSelection`  | `CopyText(tsv)` or `CopyError` |
-| All others      | `None`                         |
+| Command                 | Output                                                                                               |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| `CopySelection`         | `CopyText(tsv)` or `CopyError`                                                                       |
+| `CutSelection`          | `CopyText(tsv)` or `CopyError`                                                                       |
+| `CommitEdit` (rejected) | `ValidationError { row, col_key, message }` — fires for both `InvalidEditMode::Revert` and `::Block` |
+| All others              | `None`                                                                                               |
 
 
 
@@ -603,29 +657,31 @@ pub struct GridModel {
     pub editable: bool,
     pub selectable: bool,
     pub column_reorderable: bool,
+    pub invalid_edit_mode: InvalidEditMode,
 }
 ```
 
 ## Fields
 
-| Field                | Type                             | Default      | Description                                                   |
-| -------------------- | -------------------------------- | ------------ | ------------------------------------------------------------- |
-| `columns`            | `Vec<ColumnDef>`                 | —            | Ordered column definitions                                    |
-| `data`               | `Box<dyn DataSource>`            | —            | Backing data provider                                         |
-| `row_height`         | `f64`                            | —            | Height of data rows (logical px)                              |
-| `header_height`      | `f64`                            | —            | Height of header row (logical px)                             |
-| `column_offsets`     | `ColumnOffsets`                  | computed     | Precomputed left-edge offsets                                 |
-| `patches`            | `HashMap<(u64, String), String>` | empty        | Cell value overrides                                          |
-| `row_number_width`   | `f64`                            | auto         | Gutter width (auto from row count)                            |
-| `sort_order`         | `Vec<u64>`                       | empty        | Display→physical row mapping                                  |
-| `pinned_count`       | `usize`                          | `0`          | Number of pinned leading columns                              |
-| `filters`            | `HashMap<String, String>`        | empty        | Per-column text filters                                       |
-| `filtered_indices`   | `Vec<u64>`                       | empty        | Filtered physical row indices                                 |
-| `mode`               | `DataSourceMode`                 | `ClientSide` | Client or server-side data                                    |
-| `scrollbar_size`     | `f64`                            | `14.0`       | Scrollbar reserved space                                      |
-| `editable`           | `bool`                           | `true`       | Global inline-edit toggle (per-column flag still applies)     |
-| `selectable`         | `bool`                           | `true`       | Global selection toggle; clears selection when set to `false` |
-| `column_reorderable` | `bool`                           | `true`       | Allow header drag-to-reorder. `MoveColumn` works regardless   |
+| Field                | Type                             | Default      | Description                                                                                     |
+| -------------------- | -------------------------------- | ------------ | ----------------------------------------------------------------------------------------------- |
+| `columns`            | `Vec<ColumnDef>`                 | —            | Ordered column definitions                                                                      |
+| `data`               | `Box<dyn DataSource>`            | —            | Backing data provider                                                                           |
+| `row_height`         | `f64`                            | —            | Height of data rows (logical px)                                                                |
+| `header_height`      | `f64`                            | —            | Height of header row (logical px)                                                               |
+| `column_offsets`     | `ColumnOffsets`                  | computed     | Precomputed left-edge offsets                                                                   |
+| `patches`            | `HashMap<(u64, String), String>` | empty        | Cell value overrides                                                                            |
+| `row_number_width`   | `f64`                            | auto         | Gutter width (auto from row count)                                                              |
+| `sort_order`         | `Vec<u64>`                       | empty        | Display→physical row mapping                                                                    |
+| `pinned_count`       | `usize`                          | `0`          | Number of pinned leading columns                                                                |
+| `filters`            | `HashMap<String, String>`        | empty        | Per-column text filters                                                                         |
+| `filtered_indices`   | `Vec<u64>`                       | empty        | Filtered physical row indices                                                                   |
+| `mode`               | `DataSourceMode`                 | `ClientSide` | Client or server-side data                                                                      |
+| `scrollbar_size`     | `f64`                            | `14.0`       | Scrollbar reserved space                                                                        |
+| `editable`           | `bool`                           | `true`       | Global inline-edit toggle (per-column flag still applies)                                       |
+| `selectable`         | `bool`                           | `true`       | Global selection toggle; clears selection when set to `false`                                   |
+| `column_reorderable` | `bool`                           | `true`       | Allow header drag-to-reorder. `MoveColumn` works regardless                                     |
+| `invalid_edit_mode`  | `InvalidEditMode`                | `Revert`     | Policy applied when a `CommitEdit` fails validation — see [Validation](/features/validation.md) |
 
 ## Constructors
 
@@ -671,6 +727,7 @@ impl GridModelBuilder {
     pub fn editable(self, v: bool) -> Self;         // default true
     pub fn selectable(self, v: bool) -> Self;       // default true
     pub fn column_reorderable(self, v: bool) -> Self; // default true
+    pub fn invalid_edit_mode(self, m: InvalidEditMode) -> Self; // default Revert
     pub fn build(self) -> GridModel;
 }
 ```
@@ -696,6 +753,18 @@ pub enum DataSourceMode {
     ServerSide,  // sort/filter delegated to server
 }
 ```
+
+## InvalidEditMode
+
+```rust
+pub enum InvalidEditMode {
+    Revert,  // drop the edit session, revert the cell (default)
+    Block,   // keep the edit session open with the error attached
+}
+```
+
+Toggle at runtime with `GridCommand::SetInvalidEditMode`. See
+[Validation](/features/validation.md) for the full behaviour.
 
 
 
@@ -2448,19 +2517,20 @@ url: /features/callbacks.md
 
 ## Overview
 
-`WebGridCanvas` exposes 4 callbacks for reacting to user-driven mutations.
+`WebGridCanvas` exposes callbacks for reacting to user-driven mutations.
 They're the primitives you need to persist grid state to localStorage,
 a backend, or any external sink. The grid itself never persists — that
 choice is left to the caller.
 
 ## Available callbacks
 
-| Method                     | Triggers when                                 |
-| -------------------------- | --------------------------------------------- |
-| `set_on_change`            | A `CommitEdit` or `PasteAt` mutates cell data |
-| `set_on_columns_changed`   | Layout changes: width / order / pin count     |
-| `set_on_validation_error`  | A column `validator` rejected an edit         |
-| `set_on_cell_button_click` | User clicked an in-cell button                |
+| Method                            | Triggers when                                                                                                                                 |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `set_on_change`                   | A `CommitEdit` or `PasteAt` mutates cell data                                                                                                 |
+| `set_on_columns_changed`          | Layout changes: width / order / pin count                                                                                                     |
+| `set_on_validation_error`         | A `CommitEdit` was rejected by validation                                                                                                     |
+| `set_on_validation_state_changed` | Live validation state changes on every `StartEdit` / `ValidateEdit` / `CommitEdit` / `CancelEdit` — see [Validation](/features/validation.md) |
+| `set_on_cell_button_click`        | User clicked an in-cell button                                                                                                                |
 
 ## Persisting column layout
 
@@ -3145,6 +3215,13 @@ to undo or **Ctrl+Y** to redo. See [Undo & Redo](/features/undo-redo.md) for det
 
 Even `FnDataSource` (which has no `set_cell`) supports editing — the new value
 is stored in `GridModel::patches`, which overrides the data source for that cell.
+
+## Validation
+
+`CommitEdit` (and the live `ValidateEdit` command fired on every keystroke)
+run through per-column validation before the value is accepted. See
+[Validation](/features/validation.md) for declarative rules, the
+revert-or-block policy, and live feedback UI hooks.
 
 
 
@@ -4214,53 +4291,148 @@ url: /features/validation.md
 
 ## Overview
 
-rs-grid supports per-column validators. A validator is called **before** a cell
-edit is committed. If it returns an error, the edit is cancelled and a callback
-is fired — the data layer is never touched.
+rs-grid validates a cell edit **before** it is committed. Validation runs in
+two layers, checked in order:
+
+1. **Declarative rules** (`ColumnDef::rules: Vec<ValidationRule>`) — the
+   recommended way to validate. Built-in rules cover the common cases
+   (`Required`, `MinLength`, `MaxLength`, `Range`, `OneOf`), plus a `Custom`
+   escape hatch.
+2. **Legacy validator** (`ColumnDef::validator: Option<CellValidator>`) — a
+   free-form closure, still supported for backward compatibility. It only
+   runs once every rule has passed.
 
 ```
-StartEdit → user types → CommitEdit
-  → validator(&value)
-      Ok(())  → patch written → on_change()
-      Err(msg) → CancelEdit   → on_validation_error(row, col, msg)
+StartEdit → user types → ValidateEdit (every keystroke, live) → CommitEdit
+  → rules (in order) → legacy validator (if any)
+      Ok(())   → patch written → on_change()
+      Err(msg) → InvalidEditMode decides what happens next
 ```
 
-## Adding a validator
+Validation is enforced inside `GridState::apply`, not just at the UI layer —
+so it holds for every consumer (native tests, the canvas renderer, any
+future custom renderer).
 
-Set `ColumnDef::validator` with a `CellValidator`:
+## Adding rules
+
+Builder sugar on `ColumnDef` covers the common cases:
 
 ```rust
-use rs_grid_core::column::{CellValidator, ColumnDef};
+use rs_grid_core::column::ColumnDef;
 
-let mut col = ColumnDef::new("salary", "Salary", 120.0);
-col.validator = Some(CellValidator::new(|v| {
-    v.parse::<f64>()
-        .ok()
-        .filter(|&n| n >= 0.0)
-        .map(|_| ())
-        .ok_or_else(|| "Must be a positive number".to_string())
-}));
+let name = ColumnDef::new("name", "Name", 160.0).required();
+
+let bio = ColumnDef::new("bio", "Bio", 240.0)
+    .with_min_length(10)
+    .with_max_length(500);
+
+let age = ColumnDef::new("age", "Age", 80.0).with_range(0.0, 130.0);
+
+let status = ColumnDef::new("status", "Status", 120.0)
+    .with_allowed_values(vec!["active".into(), "inactive".into()]);
 ```
 
-The closure receives the raw cell string and must return:
+Or set the full list at once with `ValidationRule` directly, e.g. for a
+`Custom` rule:
 
-- `Ok(())` — accept the value
-- `Err(String)` — reject with an error message
+```rust
+use rs_grid_core::{
+    column::ColumnDef,
+    validation::ValidationRule,
+};
 
-## Listening to validation errors
+let sku = ColumnDef::new("sku", "SKU", 120.0).with_rules(vec![
+    ValidationRule::required(),
+    ValidationRule::Custom(CellValidator::new(|v| {
+        v.starts_with("SKU-")
+            .then_some(())
+            .ok_or_else(|| "Must start with SKU-".to_string())
+    })),
+]);
+```
+
+`ValidationRule` variants:
+
+| Variant                 | Rejects when                                                  |
+| ----------------------- | ------------------------------------------------------------- |
+| `Required`              | Value is empty                                                |
+| `MinLength(usize)`      | Fewer characters than the minimum                             |
+| `MaxLength(usize)`      | More characters than the maximum                              |
+| `Range(f64, f64)`       | Value doesn't parse as a number, or falls outside `min..=max` |
+| `OneOf(Vec<String>)`    | Value isn't one of the allowed strings                        |
+| `Custom(CellValidator)` | The wrapped closure returns `Err`                             |
+
+Rules run **in order, first failure wins**. Once all rules pass, the legacy
+`validator` (if set) still runs:
+
+```rust
+pub fn validate_value(&self, value: &str) -> Result<(), String>
+```
+
+## Revert or block: `InvalidEditMode`
+
+`GridModel::invalid_edit_mode` (default `Revert`) controls what happens when
+`CommitEdit` fails validation:
+
+| Mode               | Behaviour                                                                                                             |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `Revert` (default) | The edit session ends and the cell reverts to its previous value — same as before validation existed.                 |
+| `Block`            | The edit session **stays open** with the error attached, so the user can fix the value in place instead of losing it. |
+
+Set it at build time:
+
+```rust
+use rs_grid_core::{GridModelBuilder, validation::InvalidEditMode};
+
+let model = GridModelBuilder::new(columns, Box::new(data))
+    .invalid_edit_mode(InvalidEditMode::Block)
+    .build();
+```
+
+or toggle it at runtime with `GridCommand::SetInvalidEditMode(mode)`.
+
+Both modes emit `CommandOutput::ValidationError { row, col_key, message }`.
+
+## Live feedback while typing
+
+`GridCommand::ValidateEdit { value }` re-checks the in-progress edit's
+pending value **without committing** — it's a no-op without an active edit
+and creates no undo entry. `rs-grid-web` dispatches it automatically on every
+keystroke, so the in-progress edit always reflects the current validation
+state, not just the last commit attempt.
+
+Read the live state on demand:
+
+```rust
+pub fn validation_error(&self) -> Option<(u64, String, String)>
+```
+
+`Some((row, col_key, message))` while the in-progress edit is invalid,
+`None` otherwise.
+
+## Listening to validation
+
+There are two callbacks — pick based on when you need to react:
+
+| Callback                      | Fires                                                                                      | Use it for                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `on_validation_state_changed` | Every `StartEdit` / `ValidateEdit` / `CommitEdit` / `CancelEdit` — i.e. on every keystroke | A live, custom validation UI (tooltip, banner, icon) that tracks the value as the user types |
+| `on_validation_error`         | Only when a `CommitEdit` is rejected                                                       | A one-shot notification (toast, log) when a save attempt fails                               |
 
 
 **[object Object]**
 
-Pass `on_validation_error` as a prop to `<GridCanvas>`:
 ```rust
-let set_error = /* RwSignal<String> */;
+let validation_state = RwSignal::new(None::<(u64, String, String)>);
 
 view! {
     <GridCanvas
         model=model
+        on_validation_state_changed=Some(Box::new(move |state| {
+            validation_state.set(state);
+        }))
         on_validation_error=Some(Box::new(move |_row, col, msg| {
-            set_error.set(format!("[{col}] {msg}"));
+            log::warn!("[{col}] rejected: {msg}");
         }))
     />
 }
@@ -4269,8 +4441,14 @@ view! {
 
 **[object Object]**
 
-Register a callback on the web canvas handle:
 ```rust
+gc.set_on_validation_state_changed(move |state| {
+    match state {
+        Some((row, col_key, message)) => show_my_tooltip(row, &col_key, &message),
+        None => hide_my_tooltip(),
+    }
+});
+
 gc.set_on_validation_error(|row, col_key, message| {
     web_sys::console::warn_1(
         &format!("[{col_key}] row {row}: {message}").into()
@@ -4281,13 +4459,13 @@ gc.set_on_validation_error(|row, col_key, message| {
 
 **[object Object]**
 
-Pass `on_validation_error` as an `EventHandler` to `GridCanvas`:
 ```rust
-let mut error = use_signal(String::new);
-
 rsx! {
     GridCanvas {
         model: model_slot,
+        on_validation_state_changed: move |state: Option<(u64, String, String)>| {
+            validation_state.set(state);
+        },
         on_validation_error: move |(_, col, msg): (u64, String, String)| {
             error.set(format!("[{col}] {msg}"));
         },
@@ -4298,47 +4476,70 @@ rsx! {
 
 **[object Object]**
 
-Pass `on_validation_error` as an `Option<ValidationErrorCb>` to `GridCanvas`:
 ```rust
-use std::rc::Rc;
-use rs_grid_yew::{GridCanvas, wrap_model, ValidationErrorCb};
+use rs_grid_yew::{GridCanvas, ValidationStateChangedCb};
 
-let error_cb: ValidationErrorCb = Rc::new(|_row, col, msg| {
-    web_sys::console::warn_1(
-        &format!("[{col}] {msg}").into()
-    );
+let vsc_cb: ValidationStateChangedCb = Rc::new(|state| {
+    validation_state.set(state);
 });
 
 html! {
     <GridCanvas model={model}
-        on_validation_error={Some(error_cb)} />
+        on_validation_state_changed={Some(vsc_cb)} />
 }
 ```
 
 
-The callback fires synchronously after the edit is cancelled. Arguments:
+rs-grid does not impose a validation-error widget (no built-in tooltip
+component) — it exposes the raw state so you can build one with your own
+framework/CSS.
 
-| Argument  | Type   | Description                             |
-| --------- | ------ | --------------------------------------- |
-| `row`     | `u64`  | Logical row index of the rejected cell  |
-| `col_key` | `&str` | Key of the column whose validator fired |
-| `message` | `&str` | Error string returned by the validator  |
+## Positioning a custom validation UI
+
+`GridCanvas::cell_client_rect(row, col_key)` returns the cell's client-space
+rectangle `(left, top, width, height)` in CSS pixels relative to the page —
+ready to position a `position: fixed` tooltip or banner next to the failing
+cell:
+
+```rust
+if let Some((row, col_key, message)) = canvas.validation_error() {
+    if let Some((left, top, _w, height)) = canvas.cell_client_rect(row, &col_key) {
+        show_tooltip(left, top + height + 4.0, &message); // just below the cell
+    }
+}
+```
+
+Returns `None` if `col_key` doesn't exist. It's geometry only — it doesn't
+check whether the cell is currently scrolled into view.
+
+## Native `title` tooltip fallback
+
+By default, the inline edit `<input>` gets a native `title` attribute
+reflecting the current validation message — a zero-config browser tooltip
+that needs no integration work. Disable it once you wire up a custom UI, so
+the two don't compete:
+
+```rust
+canvas.set_native_validation_tooltip(false);
+```
 
 ## Behaviour
 
-- Validation runs **only on user edits** (`CommitEdit`). Programmatic writes via
-  `GridModel::set_cell` bypass the validator.
-- On rejection, `CancelEdit` is applied automatically — the cell reverts to its
-  previous value. No undo entry is created.
-- `Select` editors are also validated; the selected option value is passed to
-  the validator before commit.
-- Validators are **synchronous**. For async validation (e.g. server checks),
-  commit optimistically and revert via `GridCommand::Undo` if the check fails.
+- Validation runs **only on user edits** (`CommitEdit` / `ValidateEdit`).
+  Programmatic writes via `GridModel::set_cell` bypass it.
+- `Select` editors are validated too — the selected option's value is
+  checked like any other.
+- Rules and the legacy validator are **synchronous**. For async validation
+  (e.g. a server check), commit optimistically and revert with
+  `GridCommand::Undo` if the check fails server-side.
+- `Revert` mode creates no undo entry; `Block` mode doesn't either, since
+  the edit session never closes on failure.
 
 ## See also
 
 - [Editing](/features/editing.md) — editing lifecycle and editor types
-- [ColumnDef API](/api/column-def.md) — `CellValidator` type reference
+- [ColumnDef API](/api/column-def.md) — `ValidationRule` / `CellValidator` type reference
+- [GridCommand API](/api/grid-command.md) — `ValidateEdit`, `SetInvalidEditMode`
 - [Undo / Redo](/features/undo-redo.md) — undo stack behaviour
 
 

@@ -10,17 +10,19 @@ pub struct ColumnDef {
     pub format: Option<CellFormat>,
     pub editor: Option<CellEditor>,
     pub validator: Option<CellValidator>,
+    pub rules: Vec<ValidationRule>,
 }
 ```
 
-| Field       | Type                    | Description                                         |
-| ----------- | ----------------------- | --------------------------------------------------- |
-| `key`       | `String`                | Unique identifier, used to look up cell values      |
-| `label`     | `String`                | Display text in the column header                   |
-| `width`     | `f64`                   | Width in logical pixels                             |
-| `format`    | `Option<CellFormat>`    | Display format (`None` = raw text)                  |
-| `editor`    | `Option<CellEditor>`    | Editor type (`None` = default text input)           |
-| `validator` | `Option<CellValidator>` | Optional validator called before committing an edit |
+| Field       | Type                    | Description                                                                                                                |
+| ----------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `key`       | `String`                | Unique identifier, used to look up cell values                                                                             |
+| `label`     | `String`                | Display text in the column header                                                                                          |
+| `width`     | `f64`                   | Width in logical pixels                                                                                                    |
+| `format`    | `Option<CellFormat>`    | Display format (`None` = raw text)                                                                                         |
+| `editor`    | `Option<CellEditor>`    | Editor type (`None` = default text input)                                                                                  |
+| `validator` | `Option<CellValidator>` | Legacy validator, kept for backward compatibility. Prefer `rules` for new code — see [Validation](/features/validation.md) |
+| `rules`     | `Vec<ValidationRule>`   | Declarative validation rules, checked in order before `validator`                                                          |
 
 ### Constructor
 
@@ -95,6 +97,46 @@ CellValidator::new(|v| {
 | `validate(value: &str)` | Run the validator; returns `Ok(())` or `Err(message)` |
 
 See [Validation](/features/validation.md) for the full feature guide.
+
+## ValidationRule
+
+```rust
+#[non_exhaustive]
+pub enum ValidationRule {
+    Required,
+    MinLength(usize),
+    MaxLength(usize),
+    Range(f64, f64),
+    OneOf(Vec<String>),
+    Custom(CellValidator),
+}
+```
+
+Declarative rules attached to `ColumnDef::rules`, checked **in order,
+first failure wins**, before the legacy `validator`.
+
+### Builder sugar on `ColumnDef`
+
+| Method                                      | Pushes                            | Returns |
+| ------------------------------------------- | --------------------------------- | ------- |
+| `.required()`                               | `ValidationRule::Required`        | `Self`  |
+| `.with_min_length(min: usize)`              | `ValidationRule::MinLength(min)`  | `Self`  |
+| `.with_max_length(max: usize)`              | `ValidationRule::MaxLength(max)`  | `Self`  |
+| `.with_range(min: f64, max: f64)`           | `ValidationRule::Range(min, max)` | `Self`  |
+| `.with_allowed_values(values: Vec<String>)` | `ValidationRule::OneOf(values)`   | `Self`  |
+| `.with_rules(rules: Vec<ValidationRule>)`   | replaces `rules` entirely         | `Self`  |
+
+### `ColumnDef::validate_value`
+
+```rust
+pub fn validate_value(&self, value: &str) -> Result<(), String>
+```
+
+Runs `rules` in order, then `validator` if all rules passed. Returns the
+first failure's message, if any.
+
+See [Validation](/features/validation.md) for `InvalidEditMode` and live
+per-keystroke feedback.
 
 ## CellEditor
 

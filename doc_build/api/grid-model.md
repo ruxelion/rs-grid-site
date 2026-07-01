@@ -20,29 +20,31 @@ pub struct GridModel {
     pub editable: bool,
     pub selectable: bool,
     pub column_reorderable: bool,
+    pub invalid_edit_mode: InvalidEditMode,
 }
 ```
 
 ## Fields
 
-| Field                | Type                             | Default      | Description                                                   |
-| -------------------- | -------------------------------- | ------------ | ------------------------------------------------------------- |
-| `columns`            | `Vec<ColumnDef>`                 | —            | Ordered column definitions                                    |
-| `data`               | `Box<dyn DataSource>`            | —            | Backing data provider                                         |
-| `row_height`         | `f64`                            | —            | Height of data rows (logical px)                              |
-| `header_height`      | `f64`                            | —            | Height of header row (logical px)                             |
-| `column_offsets`     | `ColumnOffsets`                  | computed     | Precomputed left-edge offsets                                 |
-| `patches`            | `HashMap<(u64, String), String>` | empty        | Cell value overrides                                          |
-| `row_number_width`   | `f64`                            | auto         | Gutter width (auto from row count)                            |
-| `sort_order`         | `Vec<u64>`                       | empty        | Display→physical row mapping                                  |
-| `pinned_count`       | `usize`                          | `0`          | Number of pinned leading columns                              |
-| `filters`            | `HashMap<String, String>`        | empty        | Per-column text filters                                       |
-| `filtered_indices`   | `Vec<u64>`                       | empty        | Filtered physical row indices                                 |
-| `mode`               | `DataSourceMode`                 | `ClientSide` | Client or server-side data                                    |
-| `scrollbar_size`     | `f64`                            | `14.0`       | Scrollbar reserved space                                      |
-| `editable`           | `bool`                           | `true`       | Global inline-edit toggle (per-column flag still applies)     |
-| `selectable`         | `bool`                           | `true`       | Global selection toggle; clears selection when set to `false` |
-| `column_reorderable` | `bool`                           | `true`       | Allow header drag-to-reorder. `MoveColumn` works regardless   |
+| Field                | Type                             | Default      | Description                                                                                     |
+| -------------------- | -------------------------------- | ------------ | ----------------------------------------------------------------------------------------------- |
+| `columns`            | `Vec<ColumnDef>`                 | —            | Ordered column definitions                                                                      |
+| `data`               | `Box<dyn DataSource>`            | —            | Backing data provider                                                                           |
+| `row_height`         | `f64`                            | —            | Height of data rows (logical px)                                                                |
+| `header_height`      | `f64`                            | —            | Height of header row (logical px)                                                               |
+| `column_offsets`     | `ColumnOffsets`                  | computed     | Precomputed left-edge offsets                                                                   |
+| `patches`            | `HashMap<(u64, String), String>` | empty        | Cell value overrides                                                                            |
+| `row_number_width`   | `f64`                            | auto         | Gutter width (auto from row count)                                                              |
+| `sort_order`         | `Vec<u64>`                       | empty        | Display→physical row mapping                                                                    |
+| `pinned_count`       | `usize`                          | `0`          | Number of pinned leading columns                                                                |
+| `filters`            | `HashMap<String, String>`        | empty        | Per-column text filters                                                                         |
+| `filtered_indices`   | `Vec<u64>`                       | empty        | Filtered physical row indices                                                                   |
+| `mode`               | `DataSourceMode`                 | `ClientSide` | Client or server-side data                                                                      |
+| `scrollbar_size`     | `f64`                            | `14.0`       | Scrollbar reserved space                                                                        |
+| `editable`           | `bool`                           | `true`       | Global inline-edit toggle (per-column flag still applies)                                       |
+| `selectable`         | `bool`                           | `true`       | Global selection toggle; clears selection when set to `false`                                   |
+| `column_reorderable` | `bool`                           | `true`       | Allow header drag-to-reorder. `MoveColumn` works regardless                                     |
+| `invalid_edit_mode`  | `InvalidEditMode`                | `Revert`     | Policy applied when a `CommitEdit` fails validation — see [Validation](/features/validation.md) |
 
 ## Constructors
 
@@ -88,6 +90,7 @@ impl GridModelBuilder {
     pub fn editable(self, v: bool) -> Self;         // default true
     pub fn selectable(self, v: bool) -> Self;       // default true
     pub fn column_reorderable(self, v: bool) -> Self; // default true
+    pub fn invalid_edit_mode(self, m: InvalidEditMode) -> Self; // default Revert
     pub fn build(self) -> GridModel;
 }
 ```
@@ -113,3 +116,15 @@ pub enum DataSourceMode {
     ServerSide,  // sort/filter delegated to server
 }
 ```
+
+## InvalidEditMode
+
+```rust
+pub enum InvalidEditMode {
+    Revert,  // drop the edit session, revert the cell (default)
+    Block,   // keep the edit session open with the error attached
+}
+```
+
+Toggle at runtime with `GridCommand::SetInvalidEditMode`. See
+[Validation](/features/validation.md) for the full behaviour.

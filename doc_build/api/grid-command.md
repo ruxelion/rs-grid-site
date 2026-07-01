@@ -68,9 +68,19 @@ ClearAllFilters
 
 ```rust
 StartEdit { row: u64, col_key: String }
+ValidateEdit { value: String }
 CommitEdit { row: u64, col_key: String, value: String }
 CancelEdit
+SetInvalidEditMode(InvalidEditMode)
 ```
+
+:::note
+`ValidateEdit` re-checks the in-progress edit's pending value **without
+committing** — a no-op without an active edit, and it creates no undo entry.
+`rs-grid-web` dispatches it on every keystroke for live feedback. See
+[Validation](/features/validation.md) for `ValidationRule` and
+`InvalidEditMode`.
+:::
 
 ### Clipboard
 
@@ -129,6 +139,7 @@ pub enum CommandOutput {
     None,
     CopyText(String),
     CopyError(CopyError),
+    ValidationError { row: u64, col_key: String, message: String },
 }
 
 #[non_exhaustive]
@@ -138,8 +149,9 @@ pub enum CopyError {
 }
 ```
 
-| Command         | Output                         |
-| --------------- | ------------------------------ |
-| `CopySelection` | `CopyText(tsv)` or `CopyError` |
-| `CutSelection`  | `CopyText(tsv)` or `CopyError` |
-| All others      | `None`                         |
+| Command                 | Output                                                                                               |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- |
+| `CopySelection`         | `CopyText(tsv)` or `CopyError`                                                                       |
+| `CutSelection`          | `CopyText(tsv)` or `CopyError`                                                                       |
+| `CommitEdit` (rejected) | `ValidationError { row, col_key, message }` — fires for both `InvalidEditMode::Revert` and `::Block` |
+| All others              | `None`                                                                                               |

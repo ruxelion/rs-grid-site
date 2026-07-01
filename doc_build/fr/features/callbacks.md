@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-`WebGridCanvas` expose 4 callbacks pour réagir aux mutations déclenchées
+`WebGridCanvas` expose des callbacks pour réagir aux mutations déclenchées
 par l'utilisateur. Ce sont les primitives nécessaires pour persister
 l'état de la grille dans localStorage, vers un backend, ou tout autre
 puits externe. La grille elle-même ne persiste jamais rien — ce choix
@@ -10,12 +10,13 @@ est laissé à l'appelant.
 
 ## Callbacks disponibles
 
-| Méthode                    | Déclenchée quand                                        |
-| -------------------------- | ------------------------------------------------------- |
-| `set_on_change`            | Une `CommitEdit` ou `PasteAt` modifie une cellule       |
-| `set_on_columns_changed`   | Layout : largeur / ordre / nombre de colonnes épinglées |
-| `set_on_validation_error`  | Un `validator` de colonne a rejeté une édition          |
-| `set_on_cell_button_click` | L'utilisateur a cliqué un bouton de cellule             |
+| Méthode                           | Déclenchée quand                                                                                                                                    |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `set_on_change`                   | Une `CommitEdit` ou `PasteAt` modifie une cellule                                                                                                   |
+| `set_on_columns_changed`          | Layout : largeur / ordre / nombre de colonnes épinglées                                                                                             |
+| `set_on_validation_error`         | Un `CommitEdit` a été rejeté par la validation                                                                                                      |
+| `set_on_validation_state_changed` | État de validation live modifié à chaque `StartEdit` / `ValidateEdit` / `CommitEdit` / `CancelEdit` — voir [Validation](/fr/features/validation.md) |
+| `set_on_cell_button_click`        | L'utilisateur a cliqué un bouton de cellule                                                                                                         |
 
 ## Persister la layout des colonnes
 

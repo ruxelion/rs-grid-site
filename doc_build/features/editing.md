@@ -103,3 +103,10 @@ to undo or **Ctrl+Y** to redo. See [Undo & Redo](/features/undo-redo.md) for det
 
 Even `FnDataSource` (which has no `set_cell`) supports editing — the new value
 is stored in `GridModel::patches`, which overrides the data source for that cell.
+
+## Validation
+
+`CommitEdit` (and the live `ValidateEdit` command fired on every keystroke)
+run through per-column validation before the value is accepted. See
+[Validation](/features/validation.md) for declarative rules, the
+revert-or-block policy, and live feedback UI hooks.

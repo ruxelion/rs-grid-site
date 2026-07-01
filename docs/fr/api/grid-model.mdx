@@ -23,6 +23,7 @@ pub struct GridModel {
     pub editable: bool,
     pub selectable: bool,
     pub column_reorderable: bool,
+    pub invalid_edit_mode: InvalidEditMode,
 }
 ```
 
@@ -46,6 +47,7 @@ pub struct GridModel {
 | `editable` | `bool` | `true` | Édition inline globale (le drapeau par colonne s'applique aussi) |
 | `selectable` | `bool` | `true` | Sélection globale ; vide la sélection si passée à `false` |
 | `column_reorderable` | `bool` | `true` | Drag-to-reorder des en-têtes. `MoveColumn` fonctionne toujours |
+| `invalid_edit_mode` | `InvalidEditMode` | `Revert` | Politique appliquée quand un `CommitEdit` échoue à la validation — voir [Validation](/fr/features/validation) |
 
 ## Constructeurs
 
@@ -91,6 +93,7 @@ impl GridModelBuilder {
     pub fn editable(self, v: bool) -> Self;         // defaut true
     pub fn selectable(self, v: bool) -> Self;       // defaut true
     pub fn column_reorderable(self, v: bool) -> Self; // defaut true
+    pub fn invalid_edit_mode(self, m: InvalidEditMode) -> Self; // defaut Revert
     pub fn build(self) -> GridModel;
 }
 ```
@@ -116,3 +119,15 @@ pub enum DataSourceMode {
     ServerSide,  // tri/filtre délégué au serveur
 }
 ```
+
+## InvalidEditMode
+
+```rust
+pub enum InvalidEditMode {
+    Revert,  // termine la session d'édition, revient à la valeur précédente (défaut)
+    Block,   // garde la session d'édition ouverte avec l'erreur attachée
+}
+```
+
+Basculer à l'exécution avec `GridCommand::SetInvalidEditMode`. Voir
+[Validation](/fr/features/validation) pour le comportement complet.
