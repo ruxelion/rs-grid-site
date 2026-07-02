@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-PostToolUse hook — runs `npm run typecheck` (tsc --noEmit) after an edit to a
-TS/TSX/MDX file.
-
-Project-wide (not single-file): tsc needs the full program to resolve types
-across files, and there is no committed formatter/linter here to run
-alongside it. Never blocks the turn — reports diagnostics only, since the
-repo has no prior enforcement to match against.
+PostToolUse hook — after an edit to a TS/TSX/MDX file, runs `npm run
+typecheck` (tsc --noEmit, report-only — needs the full program, no
+single-file mode) and `biome check --write` (auto-fixes formatting/safe lint
+issues, like `cargo fmt` on the Rust side). Exits 2 if real lint errors
+remain after the auto-fix, so Claude sees them — mirrors rs-grid's
+fmt-check.py (auto-fix format, block on real problems).
 """
 import json
 import os
@@ -34,12 +33,25 @@ while True:
 if root is None:
     sys.exit(0)
 
-r = subprocess.run(
+typecheck = subprocess.run(
     ["npm", "run", "typecheck"],
     cwd=root,
     capture_output=True,
     text=True,
     shell=True,
 )
-sys.stdout.write(r.stdout)
-sys.stderr.write(r.stderr)
+sys.stdout.write(typecheck.stdout)
+sys.stderr.write(typecheck.stderr)
+
+if file_path.endswith((".ts", ".tsx")):
+    biome = subprocess.run(
+        ["npx", "biome", "check", "--write", file_path],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        shell=True,
+    )
+    sys.stdout.write(biome.stdout)
+    sys.stderr.write(biome.stderr)
+    if biome.returncode != 0:
+        sys.exit(2)

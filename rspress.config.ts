@@ -1,6 +1,6 @@
+import path from 'node:path';
 import { defineConfig } from '@rspress/core';
 import { pluginSitemap } from '@rspress/plugin-sitemap';
-import path from 'path';
 
 const sidebarEN = [
   { text: 'gettingStarted', link: '/getting-started' },
@@ -155,7 +155,7 @@ const sidebarFR = [
   {
     text: 'dataSources',
     items: [
-      { text: 'Vue d\'ensemble', link: '/fr/data/overview' },
+      { text: "Vue d'ensemble", link: '/fr/data/overview' },
       { text: 'VecDataSource', link: '/fr/data/vec-datasource' },
       { text: 'FnDataSource', link: '/fr/data/fn-datasource' },
       { text: 'PageCache', link: '/fr/data/page-cache' },
@@ -165,7 +165,7 @@ const sidebarFR = [
   {
     text: 'theming',
     items: [
-      { text: 'Vue d\'ensemble', link: '/fr/theming/overview' },
+      { text: "Vue d'ensemble", link: '/fr/theming/overview' },
       { text: 'Variables CSS', link: '/fr/theming/css-variables' },
       { text: 'Thèmes intégrés', link: '/fr/theming/built-in-themes' },
     ],
@@ -242,8 +242,7 @@ export default defineConfig({
       lang: 'en',
       label: 'English',
       title: 'rs-grid',
-      description:
-        'High-performance Rust/WASM data grid engine for the web',
+      description: 'High-performance Rust/WASM data grid engine for the web',
     },
     {
       lang: 'fr',
@@ -280,18 +279,36 @@ export default defineConfig({
     // add the ones it does not: image, url, site_name, Twitter card.
     ['meta', { property: 'og:site_name', content: 'rs-grid' }],
     ['meta', { property: 'og:url', content: 'https://rs-grid.com/' }],
-    ['meta', { property: 'og:image', content: 'https://rs-grid.com/images/og-cover.png' }],
+    [
+      'meta',
+      {
+        property: 'og:image',
+        content: 'https://rs-grid.com/images/og-cover.png',
+      },
+    ],
     ['meta', { property: 'og:image:width', content: '1200' }],
     ['meta', { property: 'og:image:height', content: '630' }],
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:title', content: 'rs-grid' }],
-    ['meta', {
-      name: 'twitter:description',
-      content: 'High-performance Rust/WASM data grid engine for the web',
-    }],
-    ['meta', { name: 'twitter:image', content: 'https://rs-grid.com/images/og-cover.png' }],
-    // Structured data for AI/search entity recognition.
-    ['script', { type: 'application/ld+json' }, JSON.stringify({
+    [
+      'meta',
+      {
+        name: 'twitter:description',
+        content: 'High-performance Rust/WASM data grid engine for the web',
+      },
+    ],
+    [
+      'meta',
+      {
+        name: 'twitter:image',
+        content: 'https://rs-grid.com/images/og-cover.png',
+      },
+    ],
+    // Structured data for AI/search entity recognition. The [tag, attrs,
+    // content] 3-tuple isn't a shape @rspress/core's `head` type supports
+    // (only `[tag, attrs]` or a raw string) — it silently rendered an empty
+    // <script> tag. A raw HTML string is the supported way to inject content.
+    `<script type="application/ld+json">${JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
       name: 'rs-grid',
@@ -302,7 +319,7 @@ export default defineConfig({
       license: 'https://opensource.org/licenses/MIT',
       url: 'https://rs-grid.com',
       author: { '@type': 'Organization', name: 'Ruxelion' },
-    })],
+    })}</script>`,
   ],
   themeConfig: {
     darkMode: true,

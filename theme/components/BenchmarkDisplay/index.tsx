@@ -1,10 +1,9 @@
-import React from 'react';
-import styles from './index.module.css';
 import data from '../../data/benchmarks.json';
+import styles from './index.module.css';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmtRows(n: number): string {
+function _fmtRows(n: number): string {
   if (n >= 1e15) return '1 quadrillion';
   if (n >= 1e9) return `${(n / 1e9).toFixed(0)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(0)}M`;
@@ -43,7 +42,10 @@ function Bar({
   max: number;
   display: string;
 }) {
-  const pct = value != null && max > 0 ? Math.min((value / max) * 100, 100).toFixed(1) : '0';
+  const pct =
+    value != null && max > 0
+      ? Math.min((value / max) * 100, 100).toFixed(1)
+      : '0';
   return (
     <div className={styles.barRow}>
       <span className={styles.barLabel}>{label}</span>
@@ -62,13 +64,15 @@ function Bar({
 
 export function FrameScaleChart() {
   const configs = [
-    { label: '20 cols × 10k rows',      value: data.frame_us.cols20_10k },
-    { label: '50 cols × 1M rows',       value: data.frame_us.cols50_1M },
-    { label: '100 cols × 10M rows',     value: data.frame_us.cols100_10M },
-    { label: '1 000 cols × 1B rows',    value: data.frame_us.cols1000_1B },
+    { label: '20 cols × 10k rows', value: data.frame_us.cols20_10k },
+    { label: '50 cols × 1M rows', value: data.frame_us.cols50_1M },
+    { label: '100 cols × 10M rows', value: data.frame_us.cols100_10M },
+    { label: '1 000 cols × 1B rows', value: data.frame_us.cols1000_1B },
     { label: '50 cols × 1 quadrillion', value: data.frame_us.cols50_1Q },
   ];
-  const values = configs.map(c => c.value).filter((v): v is number => v != null);
+  const values = configs
+    .map((c) => c.value)
+    .filter((v): v is number => v != null);
   const max = values.length > 0 ? Math.max(...values) * 1.25 : 1;
   const budget = 16_600;
   const budgetLabel = `60fps budget: ${budget.toLocaleString()} µs`;
@@ -79,7 +83,7 @@ export function FrameScaleChart() {
         <span className={styles.chartLabel}>Time per frame (µs)</span>
         <span className={styles.chartBudget}>{budgetLabel}</span>
       </div>
-      {configs.map(c => (
+      {configs.map((c) => (
         <Bar
           key={c.label}
           label={c.label}
@@ -89,8 +93,8 @@ export function FrameScaleChart() {
         />
       ))}
       <p className={styles.chartNote}>
-        All configs render in 65–89 µs — less than 0.6% of the 16.6 ms
-        frame budget at 60fps. Row count has zero impact on frame time.
+        All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame
+        budget at 60fps. Row count has zero impact on frame time.
       </p>
     </div>
   );
@@ -102,25 +106,36 @@ export function FrameScaleChart() {
 
 export function HitTestTable() {
   const rows = [
-    { label: '1 000 rows, 1 000 cols',      ns: data.hit_test_ns.extreme_1k_rows },
-    { label: '1 billion rows, 1 000 cols',  ns: data.hit_test_ns.extreme_1B_rows },
-    { label: '1 quadrillion rows, 1 000 cols', ns: data.hit_test_ns.extreme_1Q_rows },
+    { label: '1 000 rows, 1 000 cols', ns: data.hit_test_ns.extreme_1k_rows },
+    {
+      label: '1 billion rows, 1 000 cols',
+      ns: data.hit_test_ns.extreme_1B_rows,
+    },
+    {
+      label: '1 quadrillion rows, 1 000 cols',
+      ns: data.hit_test_ns.extreme_1Q_rows,
+    },
   ];
   const colRows = [
-    { label: '10 cols',   ns: data.hit_test_ns.cell_10cols },
-    { label: '100 cols',  ns: data.hit_test_ns.cell_100cols },
+    { label: '10 cols', ns: data.hit_test_ns.cell_10cols },
+    { label: '100 cols', ns: data.hit_test_ns.cell_100cols },
     { label: '1 000 cols', ns: data.hit_test_ns.cell_1000cols },
   ];
   return (
     <div className={styles.tables}>
       <div className={styles.tableBox}>
-        <p className={styles.tableTitle}>Varying row count (1 000 cols fixed)</p>
+        <p className={styles.tableTitle}>
+          Varying row count (1 000 cols fixed)
+        </p>
         <table className={styles.table}>
           <thead>
-            <tr><th>Configuration</th><th>Hit-test time</th></tr>
+            <tr>
+              <th>Configuration</th>
+              <th>Hit-test time</th>
+            </tr>
           </thead>
           <tbody>
-            {rows.map(r => (
+            {rows.map((r) => (
               <tr key={r.label}>
                 <td>{r.label}</td>
                 <td className={styles.mono}>{fmtNs(r.ns)}</td>
@@ -130,13 +145,18 @@ export function HitTestTable() {
         </table>
       </div>
       <div className={styles.tableBox}>
-        <p className={styles.tableTitle}>Varying column count (O(log n) in action)</p>
+        <p className={styles.tableTitle}>
+          Varying column count (O(log n) in action)
+        </p>
         <table className={styles.table}>
           <thead>
-            <tr><th>Columns</th><th>Hit-test time</th></tr>
+            <tr>
+              <th>Columns</th>
+              <th>Hit-test time</th>
+            </tr>
           </thead>
           <tbody>
-            {colRows.map(r => (
+            {colRows.map((r) => (
               <tr key={r.label}>
                 <td>{r.label}</td>
                 <td className={styles.mono}>{fmtNs(r.ns)}</td>
@@ -155,21 +175,23 @@ export function HitTestTable() {
 
 export function InitTable() {
   const byRows = [
-    { label: '1 000',          us: data.init_us.rows_1k },
-    { label: '100 000',        us: data.init_us.rows_100k },
-    { label: '1 000 000',      us: data.init_us.rows_1M },
-    { label: '100 000 000',    us: data.init_us.rows_100M },
-    { label: '1 000 000 000',  us: data.init_us.rows_1B },
+    { label: '1 000', us: data.init_us.rows_1k },
+    { label: '100 000', us: data.init_us.rows_100k },
+    { label: '1 000 000', us: data.init_us.rows_1M },
+    { label: '100 000 000', us: data.init_us.rows_100M },
+    { label: '1 000 000 000', us: data.init_us.rows_1B },
     { label: '1 000 000 000 000 000', us: data.init_us.rows_1Q },
   ];
   const byCols = [
-    { label: '5',     us: data.init_us.cols_5 },
-    { label: '20',    us: data.init_us.cols_20 },
-    { label: '50',    us: data.init_us.cols_50 },
-    { label: '100',   us: data.init_us.cols_100 },
+    { label: '5', us: data.init_us.cols_5 },
+    { label: '20', us: data.init_us.cols_20 },
+    { label: '50', us: data.init_us.cols_50 },
+    { label: '100', us: data.init_us.cols_100 },
     { label: '1 000', us: data.init_us.cols_1000 },
   ];
-  const colValues = byCols.map(r => r.us).filter((v): v is number => v != null);
+  const colValues = byCols
+    .map((r) => r.us)
+    .filter((v): v is number => v != null);
   const maxCols = colValues.length > 0 ? Math.max(...colValues) * 1.25 : 1;
 
   return (
@@ -180,10 +202,13 @@ export function InitTable() {
         </p>
         <table className={styles.table}>
           <thead>
-            <tr><th>Rows</th><th>Init time</th></tr>
+            <tr>
+              <th>Rows</th>
+              <th>Init time</th>
+            </tr>
           </thead>
           <tbody>
-            {byRows.map(r => (
+            {byRows.map((r) => (
               <tr key={r.label}>
                 <td className={styles.mono}>{r.label}</td>
                 <td className={styles.mono}>{fmtUs(r.us)}</td>
@@ -196,8 +221,10 @@ export function InitTable() {
         </p>
       </div>
       <div className={styles.tableBox}>
-        <p className={styles.tableTitle}>Varying column count (1M rows fixed)</p>
-        {byCols.map(r => (
+        <p className={styles.tableTitle}>
+          Varying column count (1M rows fixed)
+        </p>
+        {byCols.map((r) => (
           <Bar
             key={r.label}
             label={`${r.label} cols`}
@@ -244,16 +271,12 @@ export function MemoryTable() {
         </tr>
       </thead>
       <tbody>
-        {rows.map(r => (
+        {rows.map((r) => (
           <tr key={r.source} className={r.highlight ? styles.rowHighlight : ''}>
             <td className={styles.mono}>{r.source}</td>
             <td>{r.desc}</td>
             <td className={styles.mono}>
-              {r.bytes === 0 ? (
-                <strong>0 bytes</strong>
-              ) : (
-                fmtBytes(r.bytes)
-              )}
+              {r.bytes === 0 ? <strong>0 bytes</strong> : fmtBytes(r.bytes)}
             </td>
           </tr>
         ))}
@@ -282,14 +305,16 @@ export function SortTable() {
       ms: data.sort_ms.string_cold_100k,
     },
   ];
-  const sortValues = rows.map(r => r.ms).filter((v): v is number => v != null);
+  const sortValues = rows
+    .map((r) => r.ms)
+    .filter((v): v is number => v != null);
   const max = sortValues.length > 0 ? Math.max(...sortValues) * 1.25 : 1;
   return (
     <div className={styles.chart}>
       <div className={styles.chartHeader}>
         <span className={styles.chartLabel}>100 000 rows — sort time (ms)</span>
       </div>
-      {rows.map(r => (
+      {rows.map((r) => (
         <div key={r.label}>
           <Bar
             label={r.label}
@@ -317,10 +342,9 @@ export function GeneratedNote() {
   return (
     <p className={styles.generatedNote}>
       Measured with Criterion (sample-size={data.sample_size ?? '—'}) on{' '}
-      <code>ubuntu-22.04</code> · commit{' '}
-      <code>{data.sha ?? 'pending'}</code> · {dateStr}.
-      Updated automatically on every push to{' '}
-      <code>main</code> via CI.
+      <code>ubuntu-22.04</code> · commit <code>{data.sha ?? 'pending'}</code> ·{' '}
+      {dateStr}. Updated automatically on every push to <code>main</code> via
+      CI.
     </p>
   );
 }

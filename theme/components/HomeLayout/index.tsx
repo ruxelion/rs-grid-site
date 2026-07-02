@@ -1,11 +1,18 @@
+import { useI18n, useLang } from '@rspress/core/runtime';
 import React, { useEffect } from 'react';
-import { useLang, useI18n } from '@rspress/core/runtime';
+import benchData from '../../data/benchmarks.json';
+import type { SiteI18nKey } from '../../i18n-types';
 import GridDemo from '../GridDemo';
 import styles from './index.module.css';
-import benchData from '../../data/benchmarks.json';
 
 const ArrowIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    aria-hidden="true"
+  >
     <path
       d="M3 8h10M9 4l4 4-4 4"
       stroke="currentColor"
@@ -17,86 +24,200 @@ const ArrowIcon = () => (
 );
 
 const GitHubIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
   </svg>
 );
 
 const FEATURES = [
-  'virtualScroll', 'editing', 'sorting', 'clipboard',
-  'columns', 'formats', 'keyboard', 'search',
-  'theming', 'serverData', 'contextMenu', 'wasm',
+  'virtualScroll',
+  'editing',
+  'sorting',
+  'clipboard',
+  'columns',
+  'formats',
+  'keyboard',
+  'search',
+  'theming',
+  'serverData',
+  'contextMenu',
+  'wasm',
 ] as const;
 
-const FeatureIcons: Record<(typeof FEATURES)[number], () => React.ReactElement> = {
+const FeatureIcons: Record<
+  (typeof FEATURES)[number],
+  () => React.ReactElement
+> = {
   virtualScroll: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
     </svg>
   ),
   editing: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
   ),
   sorting: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <path d="M11 5h10M11 9h7M11 13h4" />
       <path d="M3 4l3 3 3-3M6 7v13" />
     </svg>
   ),
   clipboard: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <rect x="8" y="2" width="8" height="4" rx="1" />
       <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
     </svg>
   ),
   columns: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <path d="M9 3v18M15 3v18" />
     </svg>
   ),
   formats: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="10" />
       <path d="M12 6v6l4 2" />
     </svg>
   ),
   keyboard: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <rect x="2" y="4" width="20" height="16" rx="2" />
       <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8" />
     </svg>
   ),
   search: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <circle cx="11" cy="11" r="8" />
       <path d="M21 21l-4.35-4.35" />
     </svg>
   ),
   theming: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <circle cx="12" cy="12" r="5" />
       <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
     </svg>
   ),
   serverData: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <ellipse cx="12" cy="5" rx="9" ry="3" />
       <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
       <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
     </svg>
   ),
   contextMenu: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <path d="M8 12h8M8 8h8M8 16h5" />
     </svg>
   ),
   wasm: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden="true"
+    >
       <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
     </svg>
   ),
@@ -131,7 +252,7 @@ const hitTestNs = benchData.hit_test_ns.extreme_1Q_rows ?? HIT_TEST_NS_FALLBACK;
 
 export default function HomeLayout() {
   const lang = useLang();
-  const t = useI18n();
+  const t = useI18n<Record<SiteI18nKey, string>>();
   const docsPath = lang === 'fr' ? '/fr/getting-started' : '/getting-started';
   const demosPath = lang === 'fr' ? '/fr/demos' : '/demos';
 
@@ -162,13 +283,7 @@ export default function HomeLayout() {
     <div className={styles.homeWrapper}>
       {/* Hero */}
       <section className={styles.hero}>
-        <video
-          className={styles.heroBgVideo}
-          autoPlay
-          loop
-          muted
-          playsInline
-        >
+        <video className={styles.heroBgVideo} autoPlay loop muted playsInline>
           <source src="/rsgrid4k.mp4" type="video/mp4" />
         </video>
         <div className={styles.heroGlow} />
@@ -216,14 +331,14 @@ export default function HomeLayout() {
             </div>
             <div className={styles.statDivider} />
             <div className={styles.stat}>
-              <span className={styles.statValue}>
-                {hitTestNs} ns
-              </span>
+              <span className={styles.statValue}>{hitTestNs} ns</span>
               <span className={styles.statLabel}>{t('hero.stat.hitTest')}</span>
             </div>
             <div className={styles.statDivider} />
             <div className={styles.stat}>
-              <span className={styles.statValue}>{t('hero.stat.rustValue')}</span>
+              <span className={styles.statValue}>
+                {t('hero.stat.rustValue')}
+              </span>
               <span className={styles.statLabel}>{t('hero.stat.rust')}</span>
             </div>
             <div className={styles.statDivider} />
@@ -251,21 +366,34 @@ export default function HomeLayout() {
               <h3 className={styles.fwTeaserTitle}>
                 {t('demo.frameworks.title')}
               </h3>
-              <p className={styles.fwTeaserSub}>
-                {t('demo.frameworks.sub')}
-              </p>
+              <p className={styles.fwTeaserSub}>{t('demo.frameworks.sub')}</p>
             </div>
             <div className={styles.fwTeaserIcons}>
               <div className={styles.fwBadge}>
-                <img src="/images/frameworks/leptos.png" alt="" width={20} height={20} />
+                <img
+                  src="/images/frameworks/leptos.png"
+                  alt=""
+                  width={20}
+                  height={20}
+                />
                 <span>{t('demo.frameworks.leptos')}</span>
               </div>
               <div className={styles.fwBadge}>
-                <img src="/images/frameworks/dioxus.png" alt="" width={20} height={20} />
+                <img
+                  src="/images/frameworks/dioxus.png"
+                  alt=""
+                  width={20}
+                  height={20}
+                />
                 <span>{t('demo.frameworks.dioxus')}</span>
               </div>
               <div className={styles.fwBadge}>
-                <img src="/images/frameworks/yew.png" alt="" width={20} height={20} />
+                <img
+                  src="/images/frameworks/yew.png"
+                  alt=""
+                  width={20}
+                  height={20}
+                />
                 <span>{t('demo.frameworks.yew')}</span>
               </div>
             </div>
@@ -319,9 +447,7 @@ export default function HomeLayout() {
           <div className={styles.archPipeline}>
             {PIPELINE_STEPS.map((step, i) => (
               <React.Fragment key={step.name}>
-                {i > 0 && (
-                  <div className={styles.archArrow}>&rarr;</div>
-                )}
+                {i > 0 && <div className={styles.archArrow}>&rarr;</div>}
                 <div
                   className={`${styles.archStep} ${step.isOutput ? styles.archStepOutput : ''}`}
                 >
@@ -335,9 +461,7 @@ export default function HomeLayout() {
           <div className={styles.cratesGrid}>
             {CRATES.map((key) => (
               <div key={key} className={styles.crateCard}>
-                <code className={styles.crateCardCode}>
-                  {CRATE_NAMES[key]}
-                </code>
+                <code className={styles.crateCardCode}>{CRATE_NAMES[key]}</code>
                 <p className={styles.crateCardDesc}>{t(`arch.${key}`)}</p>
               </div>
             ))}

@@ -25,6 +25,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Lint (Biome)
+        run: npm run lint
+
       - name: i18n parity check (docs/en vs docs/fr)
         run: npm run check:i18n
 

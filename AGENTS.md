@@ -5,10 +5,19 @@ Expert in TypeScript, Rspress v2, MDX, and technical documentation writing.
 ## Commands
 
 ```sh
-npm run dev      # dev server (hot-reload)
-npm run build    # production build → doc_build/
-npm run preview  # preview the build locally
+npm run dev        # dev server (hot-reload)
+npm run build      # production build → doc_build/
+npm run preview    # preview the build locally
+npm run typecheck  # tsc --noEmit (theme/, rspress.config.ts)
+npm run lint       # biome check . (formatting + lint, report-only)
+npm run lint:fix   # biome check --write . (auto-fixes safe issues)
+npm run check:i18n # docs/en/ vs docs/fr/ file-existence parity
 ```
+
+CI (`.github/workflows/ci.yml`) runs typecheck + lint + check:i18n + build on
+every PR. The `.claude/hooks/typecheck.py` PostToolUse hook also runs
+`biome check --write` on each edited `.ts`/`.tsx` file, blocking the turn
+(exit 2) if real lint errors remain after the auto-fix.
 
 ## Documentation
 
@@ -53,3 +62,18 @@ ruxelion-site/        # repo for the rs-grid docs site (domain: rs-grid.com)
 - The rs-grid engine repo is PRIVATE; this docs site is PUBLIC. Never reference
   private rs-grid repo paths, URLs, or internals in docs, commits, or generated
   output.
+- Ambient module declarations for asset imports `tsc` can't resolve on its own
+  (`*.module.css`, `*.css`) live in `theme/global.d.ts`.
+- Any component that needs `useI18n()` must parameterize it with
+  `Record<SiteI18nKey, string>` (from `theme/i18n-types.ts`, derived from the
+  root `i18n.json`) — calling it with no type argument only type-checks
+  against Rspress's own built-in keys, silently accepting typos in this
+  site's own translation keys (e.g. `t('hero.badge')` would type-check even
+  if `i18n.json` never defined that key). If a component receives `t` as a
+  prop, its type must be `(key: SiteI18nKey) => string`, not `(key: string)
+  => string`, or the same hole reopens one level down.
+- `rspress.config.ts`'s `head` array only supports a bare `string` (raw HTML)
+  or a `[tag, attrs]` 2-tuple — a `[tag, attrs, content]` 3-tuple type-checks
+  as an error and silently renders an empty tag. For inline script content
+  (e.g. the JSON-LD block), use a template-literal string with the full
+  `<script>...</script>` markup.

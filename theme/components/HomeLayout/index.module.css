@@ -76,8 +76,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .heroTitle {
@@ -123,7 +128,10 @@
   padding: 0.75rem 1.75rem;
   border-radius: var(--rs-radius-sm);
   text-decoration: none;
-  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+  transition:
+    background 0.15s,
+    transform 0.1s,
+    box-shadow 0.15s;
   box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
 }
 
@@ -147,7 +155,11 @@
   border-radius: var(--rs-radius-sm);
   border: 1px solid var(--rs-border-strong);
   text-decoration: none;
-  transition: color 0.15s, border-color 0.15s, transform 0.1s, background 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    transform 0.1s,
+    background 0.15s;
 }
 
 .btnOutline:hover {
@@ -254,7 +266,10 @@
   border-radius: var(--rs-radius-lg);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.1s;
 }
 
 .fwTeaser:hover {
@@ -337,7 +352,9 @@
   border: 1px solid var(--rs-border);
   border-radius: var(--rs-radius);
   padding: 1.75rem;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .featureCard:hover {

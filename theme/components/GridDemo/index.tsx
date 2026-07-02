@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { SiteI18nKey } from '../../i18n-types';
 import styles from './index.module.css';
 
 interface GridDemoProps {
-  t: (key: string) => string;
+  t: (key: SiteI18nKey) => string;
 }
 
 const ROW_OPTIONS = [
@@ -25,15 +26,29 @@ export default function GridDemo({ t }: GridDemoProps) {
   const JsGridRef = useRef<any>(null);
   const resizeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const mountGrid = useCallback(
-    (rows: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas || !JsGridRef.current) return;
-      gridRef.current?.detach();
-      gridRef.current = new JsGridRef.current(canvas, rows, COL_COUNT);
-    },
-    [],
-  );
+  const mountGrid = useCallback((rows: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !JsGridRef.current) return;
+    gridRef.current?.detach();
+    gridRef.current = new JsGridRef.current(canvas, rows, COL_COUNT);
+  }, []);
+
+  const loadWasm = useCallback(async () => {
+    setStatus('loading');
+    try {
+      // @ts-expect-error — runtime-only URL served from public/wasm/, not a
+      // real TS module; ambient `declare module` doesn't match absolute
+      // dynamic-import specifiers under `moduleResolution: bundler`.
+      const mod = await import(/* webpackIgnore: true */ '/wasm/basic_js.js');
+      await mod.default();
+      JsGridRef.current = mod.JsGrid;
+      mountGrid(1_000);
+      setStatus('ready');
+    } catch (err) {
+      console.error('WASM load failed:', err);
+      setStatus('error');
+    }
+  }, [mountGrid]);
 
   // Lazy load via IntersectionObserver
   useEffect(() => {
@@ -52,23 +67,7 @@ export default function GridDemo({ t }: GridDemoProps) {
     observer.observe(el);
 
     return () => observer.disconnect();
-  }, []);
-
-  async function loadWasm() {
-    setStatus('loading');
-    try {
-      const mod = await import(
-        /* webpackIgnore: true */ '/wasm/basic_js.js'
-      );
-      await mod.default();
-      JsGridRef.current = mod.JsGrid;
-      mountGrid(1_000);
-      setStatus('ready');
-    } catch (err) {
-      console.error('WASM load failed:', err);
-      setStatus('error');
-    }
-  }
+  }, [loadWasm]);
 
   // Re-mount when rowCount changes
   useEffect(() => {
@@ -122,6 +121,7 @@ export default function GridDemo({ t }: GridDemoProps) {
         {ROW_OPTIONS.map((opt) => (
           <button
             key={opt.value}
+            type="button"
             className={`${styles.rowBtn} ${rowCount === opt.value ? styles.rowBtnActive : ''}`}
             onClick={() => setRowCount(opt.value)}
           >

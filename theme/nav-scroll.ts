@@ -17,11 +17,14 @@ if (typeof window !== 'undefined') {
       window.addEventListener('scroll', update, { passive: true });
       window.addEventListener('popstate', () => setTimeout(update, 0));
       const origPush = history.pushState.bind(history);
-      history.pushState = function (...args: Parameters<typeof origPush>) {
+      history.pushState = (...args: Parameters<typeof origPush>) => {
         origPush(...args);
         setTimeout(update, 0);
       };
     }
   });
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  observer.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
 }

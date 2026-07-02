@@ -57,16 +57,24 @@ html.dark {
   --rp-shadow-3: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 
-/* Transparent header — background appears on scroll via JS */
+/* Transparent header — background appears on scroll via JS.
+   !important overrides Rspress's own bundled .rp-nav styles. */
 .rp-nav {
+  /* biome-ignore lint/complexity/noImportantStyles: overrides Rspress theme CSS */
   background: transparent !important;
+  /* biome-ignore lint/complexity/noImportantStyles: overrides Rspress theme CSS */
   border-bottom: 1px solid transparent !important;
-  transition: background 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+  transition:
+    background 0.3s,
+    border-color 0.3s,
+    backdrop-filter 0.3s;
 }
 
 .rp-nav.rp-nav--scrolled {
+  /* biome-ignore lint/complexity/noImportantStyles: overrides Rspress theme CSS */
   background: var(--rs-nav-bg) !important;
   backdrop-filter: var(--rs-blur);
+  /* biome-ignore lint/complexity/noImportantStyles: overrides Rspress theme CSS */
   border-bottom-color: var(--rs-border) !important;
 }
 
@@ -125,7 +133,6 @@ html.dark {
   --rs-hero-overlay: linear-gradient(180deg, #0a0f1e 0%, transparent 60%);
 }
 
-
 /* rs-grid WASM demo — light theme */
 :root {
   --rs-grid-bg: #ffffff;
@@ -148,7 +155,7 @@ html.dark {
   --rs-grid-cell-padding: 10px;
   --rs-grid-scrollbar-width: 14px;
   --rs-grid-scrollbar-radius: 4px;
-  --rs-grid-skeleton-fg: rgba(200, 200, 200, 0.30);
+  --rs-grid-skeleton-fg: rgba(200, 200, 200, 0.3);
   --rs-grid-drag-ghost-bg: #f1f5f9;
   --rs-grid-drag-ghost-text: #0f172a;
   --rs-grid-header-menu-icon: rgba(15, 23, 42, 0.71);
@@ -183,7 +190,7 @@ html.dark {
   --rs-grid-cell-text: #d0d0d0;
   --rs-grid-grid-line: #333335;
   --rs-grid-header-border: #333335;
-  --rs-grid-selection-fill: rgba(60, 130, 245, 0.30);
+  --rs-grid-selection-fill: rgba(60, 130, 245, 0.3);
   --rs-grid-selection-border: rgba(60, 130, 245, 0.9);
   --rs-grid-header-selection-fill: rgba(60, 130, 245, 0.15);
   --rs-grid-gutter-selection-fill: rgba(60, 130, 245, 0.15);
@@ -194,13 +201,13 @@ html.dark {
   --rs-grid-skeleton-fg: rgba(80, 80, 82, 0.78);
   --rs-grid-drag-ghost-bg: #2c2c2e;
   --rs-grid-drag-ghost-text: #b0b0b0;
-  --rs-grid-header-menu-icon: rgba(176, 176, 176, 0.70);
+  --rs-grid-header-menu-icon: rgba(176, 176, 176, 0.7);
   --rs-grid-header-menu-icon-hover-bg: rgba(255, 255, 255, 0.06);
   --rs-grid-pinned-bg: #1c1c1e;
   --rs-grid-pinned-header-bg: #2c2c2e;
   --rs-grid-pinned-separator-color: #333335;
   --rs-grid-gutter-bg: #2c2c2e;
-  --rs-grid-gutter-text: rgba(176, 176, 176, 0.70);
+  --rs-grid-gutter-text: rgba(176, 176, 176, 0.7);
   --rs-grid-gutter-border: #333335;
   --rs-grid-cell-btn-primary-bg: #3c82f5;
   --rs-grid-cell-btn-secondary-bg: #3c3f44;
@@ -217,4 +224,3 @@ html.dark {
   --rs-grid-ctx-hover-bg: #2c2c2e;
   --rs-grid-ctx-separator: #333335;
 }
-

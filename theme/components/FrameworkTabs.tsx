@@ -1,9 +1,6 @@
-import {
-  Tabs as RsTabs,
-  Tab,
-} from '@rspress/core/theme';
+import { Tabs as RsTabs, Tab } from '@rspress/core/theme';
+import type { ReactElement, ReactNode } from 'react';
 import React from 'react';
-import type { ReactNode, ReactElement } from 'react';
 
 const icons: Record<string, string> = {
   Leptos: '/images/frameworks/leptos.png',
@@ -46,14 +43,13 @@ function Tabs({
     if (!React.isValidElement(child)) return child;
     const label = (child.props as any).label;
     if (typeof label === 'string' && icons[label]) {
-      return React.cloneElement(
-        child as ReactElement<any>,
-        { label: enrichLabel(label) },
-      );
+      return React.cloneElement(child as ReactElement<any>, {
+        label: enrichLabel(label),
+      });
     }
     return child;
   });
   return <RsTabs {...props}>{enhanced}</RsTabs>;
 }
 
-export { Tabs, Tab };
+export { Tab, Tabs };
