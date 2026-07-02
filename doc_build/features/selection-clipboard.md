@@ -39,6 +39,25 @@ let output = state.apply(GridCommand::CutSelection);
 Same as copy, but also clears the selected cells. The clearing is recorded
 in the undo history.
 
+## Clear (Delete/Backspace)
+
+```rust
+state.apply(GridCommand::ClearCells);
+```
+
+Clears the selected cells to an empty string, same as the clear step of
+`CutSelection`, but without touching the clipboard — pressing Delete or
+Backspace shouldn't overwrite what's on it. No-op without a selection, or
+on a full-column selection (same rationale as `CutSelection`: a header
+click carries positional intent, not "clear this entire column"). See
+[Validation](/features/validation.md) for how a required cell keeps its
+value instead of being cleared.
+
+On success, the same success-flash mechanism as [Paste](#paste) below
+fires, scoped to exactly the cells `CommandOutput::CellsCleared` reports
+as cleared — not the whole selection, so a cell skipped for being locked
+or required doesn't get a misleading "success" flash.
+
 ## Paste
 
 ```rust
@@ -51,13 +70,21 @@ Pastes TSV text starting at the current selection anchor. Each tab-separated
 value is written to the corresponding cell. The paste is recorded as a
 batch undo entry.
 
+On success, `rs-grid-web` triggers a brief golden-yellow flash
+(`GridCanvas::flash_cells`) on exactly the cells `CommandOutput::
+PasteApplied` reports as written — not the whole target rectangle, so a
+cell skipped for being locked or failing validation doesn't get a
+misleading "success" flash. [Clear](#clear-deletebackspace) reuses the
+same mechanism.
+
 ## Keyboard shortcuts
 
-| Shortcut   | Action          |
-| ---------- | --------------- |
-| **Ctrl+C** | Copy selection  |
-| **Ctrl+X** | Cut selection   |
-| **Ctrl+V** | Paste at anchor |
+| Shortcut                   | Action                         |
+| -------------------------- | ------------------------------ |
+| **Ctrl+C**                 | Copy selection                 |
+| **Ctrl+X**                 | Cut selection                  |
+| **Ctrl+V**                 | Paste at anchor                |
+| **Delete** / **Backspace** | Clear selection (no clipboard) |
 
 These are handled by the web layer (`rs-grid-web`) which listens to
 `copy`, `cut`, and `paste` DOM events.

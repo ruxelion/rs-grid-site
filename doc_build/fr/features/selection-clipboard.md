@@ -39,6 +39,27 @@ let output = state.apply(GridCommand::CutSelection);
 Identique à copier, mais efface également les cellules sélectionnées.
 L'effacement est enregistré dans l'historique d'annulation.
 
+## Effacer (Suppr/Retour arrière)
+
+```rust
+state.apply(GridCommand::ClearCells);
+```
+
+Efface les cellules sélectionnées en chaîne vide, comme l'étape
+d'effacement de `CutSelection`, mais sans toucher au presse-papiers —
+appuyer sur Suppr ou Retour arrière ne devrait pas écraser son contenu.
+Sans effet sans sélection, ou sur une sélection de colonne entière (même
+logique que `CutSelection` : un clic sur l'en-tête porte une intention de
+positionnement, pas "effacer toute cette colonne"). Voir
+[Validation](/fr/features/validation.md) pour comment une cellule requise
+garde sa valeur plutôt que d'être effacée.
+
+En cas de succès, le même mécanisme de flash de succès que
+[Coller](#coller) ci-dessous se déclenche, limité exactement aux cellules
+que `CommandOutput::CellsCleared` rapporte comme effacées — pas toute la
+sélection, pour qu'une cellule ignorée (verrouillée ou requise) n'obtienne
+pas un flash de "succès" trompeur.
+
 ## Coller
 
 ```rust
@@ -51,13 +72,21 @@ Colle le texte TSV à partir de l'ancre de sélection actuelle. Chaque valeur
 séparée par une tabulation est écrite dans la cellule correspondante. Le collage
 est enregistré comme une entrée d'annulation groupée.
 
+En cas de succès, `rs-grid-web` déclenche un bref flash jaune doré
+(`GridCanvas::flash_cells`) exactement sur les cellules que
+`CommandOutput::PasteApplied` rapporte comme écrites — pas tout le
+rectangle cible, pour qu'une cellule ignorée (verrouillée ou échec de
+validation) n'obtienne pas un flash de "succès" trompeur. [Effacer](#effacer-supprretour-arrière)
+réutilise le même mécanisme.
+
 ## Raccourcis clavier
 
-| Raccourci  | Action              |
-| ---------- | ------------------- |
-| **Ctrl+C** | Copier la sélection |
-| **Ctrl+X** | Couper la sélection |
-| **Ctrl+V** | Coller à l'ancre    |
+| Raccourci                      | Action                                     |
+| ------------------------------ | ------------------------------------------ |
+| **Ctrl+C**                     | Copier la sélection                        |
+| **Ctrl+X**                     | Couper la sélection                        |
+| **Ctrl+V**                     | Coller à l'ancre                           |
+| **Suppr** / **Retour arrière** | Effacer la sélection (sans presse-papiers) |
 
 Ces raccourcis sont gérés par la couche web (`rs-grid-web`) qui écoute les
 événements DOM `copy`, `cut` et `paste`.

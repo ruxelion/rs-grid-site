@@ -72,6 +72,7 @@ ValidateEdit { value: String }
 CommitEdit { row: u64, col_key: String, value: String }
 CancelEdit
 SetInvalidEditMode(InvalidEditMode)
+ClearCells   // Suppr/Retour arrière — efface les cellules sélectionnées, sans presse-papiers
 ```
 
 :::note
@@ -140,6 +141,8 @@ pub enum CommandOutput {
     CopyText(String),
     CopyError(CopyError),
     ValidationError { row: u64, col_key: String, message: String },
+    PasteApplied { cells: Vec<CellCoord> },
+    CellsCleared { cells: Vec<CellCoord> },
 }
 
 #[non_exhaustive]
@@ -149,9 +152,15 @@ pub enum CopyError {
 }
 ```
 
-| Commande              | Résultat                                                                                               |
-| --------------------- | ------------------------------------------------------------------------------------------------------ |
-| `CopySelection`       | `CopyText(tsv)` ou `CopyError`                                                                         |
-| `CutSelection`        | `CopyText(tsv)` ou `CopyError`                                                                         |
-| `CommitEdit` (rejeté) | `ValidationError { row, col_key, message }` — déclenché pour `InvalidEditMode::Revert` comme `::Block` |
-| Toutes les autres     | `None`                                                                                                 |
+| Commande              | Résultat                                                                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `CopySelection`       | `CopyText(tsv)` ou `CopyError`                                                                                                            |
+| `CutSelection`        | `CopyText(tsv)` ou `CopyError`                                                                                                            |
+| `CommitEdit` (rejeté) | `ValidationError { row, col_key, message }` — déclenché pour `InvalidEditMode::Revert` comme `::Block`                                    |
+| `PasteAt`             | `PasteApplied { cells }` — coordonnées réellement écrites, un sous-ensemble du rectangle cible (cellules verrouillées/invalides ignorées) |
+| `ClearCells`          | `CellsCleared { cells }` — coordonnées réellement effacées, un sous-ensemble de la sélection ; non émis si rien n'a été effacé            |
+| Toutes les autres     | `None`                                                                                                                                    |
+
+`cells` de `PasteApplied`/`CellsCleared` est ce que `rs-grid-web` transmet
+à son animation de flash de succès, plutôt que le rectangle complet de
+sélection/cible — voir [Sélection et presse-papiers](/fr/features/selection-clipboard.md).

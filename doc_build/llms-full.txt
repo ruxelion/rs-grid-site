@@ -587,6 +587,7 @@ ValidateEdit { value: String }
 CommitEdit { row: u64, col_key: String, value: String }
 CancelEdit
 SetInvalidEditMode(InvalidEditMode)
+ClearCells   // Delete/Backspace — clears selected cells, no clipboard
 ```
 
 :::note
@@ -655,6 +656,8 @@ pub enum CommandOutput {
     CopyText(String),
     CopyError(CopyError),
     ValidationError { row: u64, col_key: String, message: String },
+    PasteApplied { cells: Vec<CellCoord> },
+    CellsCleared { cells: Vec<CellCoord> },
 }
 
 #[non_exhaustive]
@@ -664,12 +667,18 @@ pub enum CopyError {
 }
 ```
 
-| Command                 | Output                                                                                               |
-| ----------------------- | ---------------------------------------------------------------------------------------------------- |
-| `CopySelection`         | `CopyText(tsv)` or `CopyError`                                                                       |
-| `CutSelection`          | `CopyText(tsv)` or `CopyError`                                                                       |
-| `CommitEdit` (rejected) | `ValidationError { row, col_key, message }` — fires for both `InvalidEditMode::Revert` and `::Block` |
-| All others              | `None`                                                                                               |
+| Command                 | Output                                                                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `CopySelection`         | `CopyText(tsv)` or `CopyError`                                                                                               |
+| `CutSelection`          | `CopyText(tsv)` or `CopyError`                                                                                               |
+| `CommitEdit` (rejected) | `ValidationError { row, col_key, message }` — fires for both `InvalidEditMode::Revert` and `::Block`                         |
+| `PasteAt`               | `PasteApplied { cells }` — coordinates actually written, a subset of the target rectangle (locked/invalid cells are skipped) |
+| `ClearCells`            | `CellsCleared { cells }` — coordinates actually cleared, a subset of the selection; not emitted if nothing was cleared       |
+| All others              | `None`                                                                                                                       |
+
+`PasteApplied`/`CellsCleared`'s `cells` is what `rs-grid-web` passes to its
+success-flash animation, instead of the full selection/target rectangle —
+see [Selection & Clipboard](/features/selection-clipboard.md).
 
 
 
@@ -3490,18 +3499,19 @@ the canvas or use tab navigation to focus it.
 
 ## Navigation shortcuts
 
-| Shortcut          | Action                             |
-| ----------------- | ---------------------------------- |
-| **Arrow keys**    | Move selection by one cell         |
-| **Shift + Arrow** | Extend selection in that direction |
-| **Enter**         | Start editing the selected cell    |
-| **Escape**        | Cancel edit or clear selection     |
-| **Ctrl+Z**        | Undo                               |
-| **Ctrl+Y**        | Redo                               |
-| **Ctrl+C**        | Copy selection                     |
-| **Ctrl+X**        | Cut selection                      |
-| **Ctrl+V**        | Paste at selection anchor          |
-| **Ctrl+F**        | Open search bar                    |
+| Shortcut                   | Action                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| **Arrow keys**             | Move selection by one cell                                                                 |
+| **Shift + Arrow**          | Extend selection in that direction                                                         |
+| **Enter**                  | Start editing the selected cell                                                            |
+| **Escape**                 | Cancel edit or clear selection                                                             |
+| **Ctrl+Z**                 | Undo                                                                                       |
+| **Ctrl+Y**                 | Redo                                                                                       |
+| **Ctrl+C**                 | Copy selection                                                                             |
+| **Ctrl+X**                 | Cut selection                                                                              |
+| **Ctrl+V**                 | Paste at selection anchor                                                                  |
+| **Delete** / **Backspace** | Clear selected cells (`GridCommand::ClearCells`) — unlike cut, doesn't touch the clipboard |
+| **Ctrl+F**                 | Open search bar                                                                            |
 
 ## MoveSelection command
 
@@ -3783,15 +3793,15 @@ viewport at any moment, regardless of how many rows exist in the datasource.
 
 Time per frame (µs)60fps budget: 16,600 µs
 
-20 cols × 10k rows36.8 µs
+20 cols × 10k rows38.1 µs
 
-50 cols × 1M rows46.3 µs
+50 cols × 1M rows47.4 µs
 
-100 cols × 10M rows56.9 µs
+100 cols × 10M rows59.0 µs
 
-1 000 cols × 1B rows58.1 µs
+1 000 cols × 1B rows60.1 µs
 
-50 cols × 1 quadrillion48.4 µs
+50 cols × 1 quadrillion50.3 µs
 
 All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
 
@@ -3807,17 +3817,17 @@ Varying row count (1 000 cols fixed)
 
 | Configuration | Hit-test time |
 | --- | --- |
-| 1 000 rows, 1 000 cols | 65.6 ns |
+| 1 000 rows, 1 000 cols | 66.2 ns |
 | 1 billion rows, 1 000 cols | 77.9 ns |
-| 1 quadrillion rows, 1 000 cols | 64.9 ns |
+| 1 quadrillion rows, 1 000 cols | 62.7 ns |
 
 Varying column count (O(log n) in action)
 
 | Columns | Hit-test time |
 | --- | --- |
-| 10 cols | 21.9 ns |
-| 100 cols | 30.7 ns |
-| 1 000 cols | 35.7 ns |
+| 10 cols | 21.7 ns |
+| 100 cols | 28.5 ns |
+| 1 000 cols | 35.6 ns |
 
 
 The 1.7× increase from 10 → 1 000 columns (10 → 18 ns) reflects the binary search over column
@@ -3833,12 +3843,12 @@ Varying row count — FnDataSource (20 cols fixed)
 
 | Rows | Init time |
 | --- | --- |
-| 1 000 | 3.0 µs |
+| 1 000 | 2.9 µs |
 | 100 000 | 3.1 µs |
 | 1 000 000 | 3.1 µs |
-| 100 000 000 | 3.0 µs |
+| 100 000 000 | 3.1 µs |
 | 1 000 000 000 | 3.1 µs |
-| 1 000 000 000 000 000 | 3.1 µs |
+| 1 000 000 000 000 000 | 3.0 µs |
 
 Flat regardless of row count — O(n_cols), not O(n_rows).
 
@@ -3848,11 +3858,11 @@ Varying column count (1M rows fixed)
 
 20 cols3.1 µs
 
-50 cols8.1 µs
+50 cols8.3 µs
 
-100 cols16.8 µs
+100 cols16.7 µs
 
-1 000 cols162.7 µs
+1 000 cols165.4 µs
 
 Initializing a grid with **1 quadrillion virtual rows** takes the same \~5 µs as a grid with
 1 000 rows. If you need all data in memory (`VecDataSource`), initialization is still dominated
@@ -3867,15 +3877,15 @@ sort direction on the same column.
 
 100 000 rows — sort time (ms)
 
-Numeric sort (cold)16.1 ms
+Numeric sort (cold)15.8 ms
 
 Radix sort, first call — key extraction + sort
 
-Numeric sort (cached)11.8 ms
+Numeric sort (cached)11.4 ms
 
 Radix sort, direction toggle — keys reused from cache
 
-String sort (cold)19.7 ms
+String sort (cold)19.8 ms
 
 Lexicographic comparison sort
 
@@ -3900,7 +3910,7 @@ For large datasets (> 100k rows), prefer `FnDataSource` with server-side paginat
 See [FnDataSource](/data/fn-datasource.md) and [PageCache](/data/page-cache.md) for implementation details.
 
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `927cc5c` · July 2, 2026. Updated automatically on every push to `main` via CI.
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `84079a2` · July 2, 2026. Updated automatically on every push to `main` via CI.
 
 
 
@@ -4187,6 +4197,25 @@ let output = state.apply(GridCommand::CutSelection);
 Same as copy, but also clears the selected cells. The clearing is recorded
 in the undo history.
 
+## Clear (Delete/Backspace)
+
+```rust
+state.apply(GridCommand::ClearCells);
+```
+
+Clears the selected cells to an empty string, same as the clear step of
+`CutSelection`, but without touching the clipboard — pressing Delete or
+Backspace shouldn't overwrite what's on it. No-op without a selection, or
+on a full-column selection (same rationale as `CutSelection`: a header
+click carries positional intent, not "clear this entire column"). See
+[Validation](/features/validation.md) for how a required cell keeps its
+value instead of being cleared.
+
+On success, the same success-flash mechanism as [Paste](#paste) below
+fires, scoped to exactly the cells `CommandOutput::CellsCleared` reports
+as cleared — not the whole selection, so a cell skipped for being locked
+or required doesn't get a misleading "success" flash.
+
 ## Paste
 
 ```rust
@@ -4199,13 +4228,21 @@ Pastes TSV text starting at the current selection anchor. Each tab-separated
 value is written to the corresponding cell. The paste is recorded as a
 batch undo entry.
 
+On success, `rs-grid-web` triggers a brief golden-yellow flash
+(`GridCanvas::flash_cells`) on exactly the cells `CommandOutput::
+PasteApplied` reports as written — not the whole target rectangle, so a
+cell skipped for being locked or failing validation doesn't get a
+misleading "success" flash. [Clear](#clear-deletebackspace) reuses the
+same mechanism.
+
 ## Keyboard shortcuts
 
-| Shortcut   | Action          |
-| ---------- | --------------- |
-| **Ctrl+C** | Copy selection  |
-| **Ctrl+X** | Cut selection   |
-| **Ctrl+V** | Paste at anchor |
+| Shortcut                   | Action                         |
+| -------------------------- | ------------------------------ |
+| **Ctrl+C**                 | Copy selection                 |
+| **Ctrl+X**                 | Cut selection                  |
+| **Ctrl+V**                 | Paste at anchor                |
+| **Delete** / **Backspace** | Clear selection (no clipboard) |
 
 These are handled by the web layer (`rs-grid-web`) which listens to
 `copy`, `cut`, and `paste` DOM events.
@@ -5200,9 +5237,9 @@ A data grid that never slows down. Scroll through millions of rows as smoothly a
 
 ∞rows, zero lag
 
-<47 µsper frame at 60fps
+<48 µsper frame at 60fps
 
-64.9 nshit-test (1 quadrillion rows)
+62.7 nshit-test (1 quadrillion rows)
 
 Pure Rustcompiled to WASM
 

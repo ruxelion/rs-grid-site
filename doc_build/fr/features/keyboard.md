@@ -8,18 +8,19 @@ lui donner le focus.
 
 ## Raccourcis de navigation
 
-| Raccourci                   | Action                                         |
-| --------------------------- | ---------------------------------------------- |
-| **Touches directionnelles** | Deplacer la selection d'une cellule            |
-| **Shift + Fleche**          | Etendre la selection dans cette direction      |
-| **Entree**                  | Commencer l'edition de la cellule selectionnee |
-| **Echap**                   | Annuler l'edition ou effacer la selection      |
-| **Ctrl+Z**                  | Annuler                                        |
-| **Ctrl+Y**                  | Retablir                                       |
-| **Ctrl+C**                  | Copier la selection                            |
-| **Ctrl+X**                  | Couper la selection                            |
-| **Ctrl+V**                  | Coller a l'ancre de selection                  |
-| **Ctrl+F**                  | Ouvrir la barre de recherche                   |
+| Raccourci                      | Action                                                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| **Touches directionnelles**    | Deplacer la selection d'une cellule                                                                                       |
+| **Shift + Fleche**             | Etendre la selection dans cette direction                                                                                 |
+| **Entree**                     | Commencer l'edition de la cellule selectionnee                                                                            |
+| **Echap**                      | Annuler l'edition ou effacer la selection                                                                                 |
+| **Ctrl+Z**                     | Annuler                                                                                                                   |
+| **Ctrl+Y**                     | Retablir                                                                                                                  |
+| **Ctrl+C**                     | Copier la selection                                                                                                       |
+| **Ctrl+X**                     | Couper la selection                                                                                                       |
+| **Ctrl+V**                     | Coller a l'ancre de selection                                                                                             |
+| **Suppr** / **Retour arriere** | Effacer les cellules selectionnees (`GridCommand::ClearCells`) — contrairement au couper, ne touche pas au presse-papiers |
+| **Ctrl+F**                     | Ouvrir la barre de recherche                                                                                              |
 
 ## Commande MoveSelection
 

@@ -7,18 +7,19 @@ the canvas or use tab navigation to focus it.
 
 ## Navigation shortcuts
 
-| Shortcut          | Action                             |
-| ----------------- | ---------------------------------- |
-| **Arrow keys**    | Move selection by one cell         |
-| **Shift + Arrow** | Extend selection in that direction |
-| **Enter**         | Start editing the selected cell    |
-| **Escape**        | Cancel edit or clear selection     |
-| **Ctrl+Z**        | Undo                               |
-| **Ctrl+Y**        | Redo                               |
-| **Ctrl+C**        | Copy selection                     |
-| **Ctrl+X**        | Cut selection                      |
-| **Ctrl+V**        | Paste at selection anchor          |
-| **Ctrl+F**        | Open search bar                    |
+| Shortcut                   | Action                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| **Arrow keys**             | Move selection by one cell                                                                 |
+| **Shift + Arrow**          | Extend selection in that direction                                                         |
+| **Enter**                  | Start editing the selected cell                                                            |
+| **Escape**                 | Cancel edit or clear selection                                                             |
+| **Ctrl+Z**                 | Undo                                                                                       |
+| **Ctrl+Y**                 | Redo                                                                                       |
+| **Ctrl+C**                 | Copy selection                                                                             |
+| **Ctrl+X**                 | Cut selection                                                                              |
+| **Ctrl+V**                 | Paste at selection anchor                                                                  |
+| **Delete** / **Backspace** | Clear selected cells (`GridCommand::ClearCells`) — unlike cut, doesn't touch the clipboard |
+| **Ctrl+F**                 | Open search bar                                                                            |
 
 ## MoveSelection command
 
