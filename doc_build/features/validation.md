@@ -275,8 +275,13 @@ writing it — a cell whose pasted value fails validation is silently skipped
 (the write doesn't happen), while the rest of the pasted block still
 applies. This mirrors how Excel and AG Grid handle the same case: neither
 blocks a paste outright, and when a rejection exists it's always per-cell,
-never all-or-nothing. `CutSelection` is unaffected, since it only ever
-writes an empty string.
+never all-or-nothing.
+
+`GridCommand::CutSelection` clears cells by writing an empty string — still
+a write, so it's validated the same way: a cell whose rules reject an empty
+value (e.g. `.required()`) keeps its original value instead of being
+cleared. The copied text on the clipboard is unaffected either way — cut
+always copies the full original values first.
 
 ## Native `title` tooltip fallback
 
