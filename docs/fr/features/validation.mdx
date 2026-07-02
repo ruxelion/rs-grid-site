@@ -291,8 +291,13 @@ est silencieusement ignorée (l'écriture n'a pas lieu), tandis que le reste
 du bloc collé s'applique normalement. Ça reflète le comportement d'Excel et
 AG Grid sur le même cas : aucun des deux ne bloque un collage entièrement,
 et quand un rejet existe il est toujours par cellule, jamais tout-ou-rien.
-`CutSelection` n'est pas affecté, puisqu'il n'écrit jamais qu'une chaîne
-vide.
+
+`GridCommand::CutSelection` vide les cellules en y écrivant une chaîne
+vide — ça reste une écriture, donc c'est validé de la même façon : une
+cellule dont les règles rejettent une valeur vide (ex. `.required()`)
+garde sa valeur d'origine plutôt que d'être vidée. Le texte copié dans le
+presse-papiers n'est pas affecté dans un cas comme dans l'autre — le
+couper copie toujours les valeurs d'origine en premier.
 
 ## Repli tooltip natif `title`
 
