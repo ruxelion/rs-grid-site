@@ -141,6 +141,48 @@ first failure's message, if any.
 See [Validation](/features/validation) for `InvalidEditMode` and live
 per-keystroke feedback.
 
+## EditablePredicate
+
+```rust
+pub struct EditablePredicate(pub Rc<dyn Fn(u64, &GridModel) -> bool>);
+```
+
+A dynamic per-cell editability override, attached to `ColumnDef.editable_predicate`.
+Receives the row index and the full [`GridModel`](/api/grid-model), so it
+can implement cross-column logic (e.g. lock a cell when another column's
+value is `"locked"`) — not just this column's own value.
+
+```rust
+EditablePredicate::new(|row, model| {
+    model.get_cell(row, "status").as_deref() != Some("locked")
+})
+```
+
+| Method | Description |
+|--------|-------------|
+| `new(f)` | Wrap a closure as a predicate |
+| `is_editable(row: u64, model: &GridModel)` | Run the predicate; returns `true`/`false` |
+
+### Builder sugar on `ColumnDef`
+
+| Method | Sets | Returns |
+|--------|------|---------|
+| `.editable_when(f)` | `editable_predicate` | `Self` |
+
+### `ColumnDef::is_cell_editable`
+
+```rust
+pub fn is_cell_editable(&self, row: u64, model: &GridModel) -> bool
+```
+
+Resolves whether `row` is editable in this column: `false` if the static
+`editable` flag is `false` (the predicate is not even called); otherwise
+the predicate's result, or `true` if no predicate is set.
+
+See [Per-cell editability](/features/editing#per-cell-editability) for the
+full feature guide, including the `not-allowed` cursor and themed
+locked-cell styling.
+
 ## CellEditor
 
 ```rust

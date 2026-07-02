@@ -315,6 +315,48 @@ first failure's message, if any.
 See [Validation](/features/validation.md) for `InvalidEditMode` and live
 per-keystroke feedback.
 
+## EditablePredicate
+
+```rust
+pub struct EditablePredicate(pub Rc<dyn Fn(u64, &GridModel) -> bool>);
+```
+
+A dynamic per-cell editability override, attached to `ColumnDef.editable_predicate`.
+Receives the row index and the full [`GridModel`](/api/grid-model.md), so it
+can implement cross-column logic (e.g. lock a cell when another column's
+value is `"locked"`) — not just this column's own value.
+
+```rust
+EditablePredicate::new(|row, model| {
+    model.get_cell(row, "status").as_deref() != Some("locked")
+})
+```
+
+| Method                                     | Description                               |
+| ------------------------------------------ | ----------------------------------------- |
+| `new(f)`                                   | Wrap a closure as a predicate             |
+| `is_editable(row: u64, model: &GridModel)` | Run the predicate; returns `true`/`false` |
+
+### Builder sugar on `ColumnDef`
+
+| Method              | Sets                 | Returns |
+| ------------------- | -------------------- | ------- |
+| `.editable_when(f)` | `editable_predicate` | `Self`  |
+
+### `ColumnDef::is_cell_editable`
+
+```rust
+pub fn is_cell_editable(&self, row: u64, model: &GridModel) -> bool
+```
+
+Resolves whether `row` is editable in this column: `false` if the static
+`editable` flag is `false` (the predicate is not even called); otherwise
+the predicate's result, or `true` if no predicate is set.
+
+See [Per-cell editability](/features/editing.md#per-cell-editability) for the
+full feature guide, including the `not-allowed` cursor and themed
+locked-cell styling.
+
 ## CellEditor
 
 ```rust
@@ -1026,6 +1068,8 @@ pub struct Theme {
     pub scrollbar_thumb: Color,
     pub row_alt_bg: Color,
     pub row_hover_bg: Color,
+    pub locked_cell_bg: Color,
+    pub locked_cell_text: Color,
     pub search_highlight: Color,
     pub search_current: Color,
     pub skeleton_fg: Color,
@@ -1058,6 +1102,8 @@ pub struct Theme {
 | `scrollbar_thumb`  | `Color` | `rgba(100,100,110,160)` | `rgba(169,177,214,102)` |
 | `row_alt_bg`       | `Color` | `rgb(252,252,253)`      | `rgb(30,32,48)`         |
 | `row_hover_bg`     | `Color` | `rgba(0,0,0,10)`        | `rgba(255,255,255,10)`  |
+| `locked_cell_bg`   | `Color` | `rgba(0,0,0,9)`         | `rgba(255,255,255,10)`  |
+| `locked_cell_text` | `Color` | `rgba(24,29,31,140)`    | `rgba(208,208,208,140)` |
 | `search_highlight` | `Color` | `rgba(255,213,0,80)`    | `rgba(255,213,0,80)`    |
 | `search_current`   | `Color` | `rgba(255,165,0,140)`   | `rgba(255,165,0,140)`   |
 | `skeleton_fg`      | `Color` | `rgba(200,200,200,100)` | `rgba(60,65,90,100)`    |
@@ -3216,6 +3262,42 @@ to undo or **Ctrl+Y** to redo. See [Undo & Redo](/features/undo-redo.md) for det
 Even `FnDataSource` (which has no `set_cell`) supports editing — the new value
 is stored in `GridModel::patches`, which overrides the data source for that cell.
 
+## Per-cell editability
+
+`ColumnDef::editable` locks an entire column. For finer control — locking
+individual cells based on row data — set a dynamic predicate with
+`.editable_when(...)`:
+
+```rust
+use rs_grid_core::column::ColumnDef;
+
+let notes = ColumnDef::new("notes", "Notes", 160.0).editable_when(
+    |row, model| model.get_cell(row, "status").as_deref() != Some("locked"),
+);
+```
+
+The predicate receives the row index and the full [`GridModel`](/api/grid-model.md),
+so it can read _any_ column's value for that row — not just its own — to
+decide whether a cell is editable. This mirrors AG Grid's
+`colDef.editable` callback.
+
+Checked only when the static `editable` flag is `true` — if a column is
+statically read-only, the predicate is never called:
+
+```
+StartEdit → editable == false?  → blocked, predicate not evaluated
+          → editable == true    → editable_when(row, model)?
+```
+
+When a cell resolves to non-editable, `rs-grid-web` shows a `not-allowed`
+cursor on hover and renders the cell with a themed locked-cell background
+and text color (`Theme::locked_cell_bg` / `Theme::locked_cell_text`, CSS
+variables `--rs-grid-locked-cell-bg` / `--rs-grid-locked-cell-text` — see
+[Theming](/theming/css-variables.md)).
+
+See [EditablePredicate](/api/column-def.md#editablepredicate) for the full
+type reference.
+
 ## Validation
 
 `CommitEdit` (and the live `ValidateEdit` command fired on every keystroke)
@@ -3697,15 +3779,15 @@ viewport at any moment, regardless of how many rows exist in the datasource.
 
 Time per frame (µs)60fps budget: 16,600 µs
 
-20 cols × 10k rows31.0 µs
+20 cols × 10k rows35.9 µs
 
-50 cols × 1M rows44.1 µs
+50 cols × 1M rows45.4 µs
 
-100 cols × 10M rows54.4 µs
+100 cols × 10M rows55.2 µs
 
-1 000 cols × 1B rows55.3 µs
+1 000 cols × 1B rows57.1 µs
 
-50 cols × 1 quadrillion46.1 µs
+50 cols × 1 quadrillion47.1 µs
 
 All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
 
@@ -3721,17 +3803,17 @@ Varying row count (1 000 cols fixed)
 
 | Configuration | Hit-test time |
 | --- | --- |
-| 1 000 rows, 1 000 cols | 37.2 ns |
-| 1 billion rows, 1 000 cols | 52.7 ns |
-| 1 quadrillion rows, 1 000 cols | 36.1 ns |
+| 1 000 rows, 1 000 cols | 50.0 ns |
+| 1 billion rows, 1 000 cols | 74.3 ns |
+| 1 quadrillion rows, 1 000 cols | 47.4 ns |
 
 Varying column count (O(log n) in action)
 
 | Columns | Hit-test time |
 | --- | --- |
-| 10 cols | 17.6 ns |
-| 100 cols | 18.4 ns |
-| 1 000 cols | 23.1 ns |
+| 10 cols | 19.2 ns |
+| 100 cols | 25.0 ns |
+| 1 000 cols | 32.7 ns |
 
 
 The 1.7× increase from 10 → 1 000 columns (10 → 18 ns) reflects the binary search over column
@@ -3747,11 +3829,11 @@ Varying row count — FnDataSource (20 cols fixed)
 
 | Rows | Init time |
 | --- | --- |
-| 1 000 | 2.7 µs |
+| 1 000 | 2.9 µs |
 | 100 000 | 3.1 µs |
 | 1 000 000 | 3.0 µs |
 | 100 000 000 | 3.0 µs |
-| 1 000 000 000 | 3.0 µs |
+| 1 000 000 000 | 3.1 µs |
 | 1 000 000 000 000 000 | 2.9 µs |
 
 Flat regardless of row count — O(n_cols), not O(n_rows).
@@ -3762,11 +3844,11 @@ Varying column count (1M rows fixed)
 
 20 cols3.0 µs
 
-50 cols7.9 µs
+50 cols8.1 µs
 
-100 cols16.1 µs
+100 cols16.5 µs
 
-1 000 cols157.1 µs
+1 000 cols164.1 µs
 
 Initializing a grid with **1 quadrillion virtual rows** takes the same \~5 µs as a grid with
 1 000 rows. If you need all data in memory (`VecDataSource`), initialization is still dominated
@@ -3781,15 +3863,15 @@ sort direction on the same column.
 
 100 000 rows — sort time (ms)
 
-Numeric sort (cold)21.1 ms
+Numeric sort (cold)17.5 ms
 
 Radix sort, first call — key extraction + sort
 
-Numeric sort (cached)15.6 ms
+Numeric sort (cached)11.9 ms
 
 Radix sort, direction toggle — keys reused from cache
 
-String sort (cold)22.8 ms
+String sort (cold)22.2 ms
 
 Lexicographic comparison sort
 
@@ -3814,7 +3896,7 @@ For large datasets (> 100k rows), prefer `FnDataSource` with server-side paginat
 See [FnDataSource](/data/fn-datasource.md) and [PageCache](/data/page-cache.md) for implementation details.
 
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `7d9571a` · July 1, 2026. Updated automatically on every push to `main` via CI.
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `8d8d785` · July 1, 2026. Updated automatically on every push to `main` via CI.
 
 
 
@@ -5052,9 +5134,9 @@ A data grid that never slows down. Scroll through millions of rows as smoothly a
 
 ∞rows, zero lag
 
-<45 µsper frame at 60fps
+<46 µsper frame at 60fps
 
-36.1 nshit-test (1 quadrillion rows)
+47.4 nshit-test (1 quadrillion rows)
 
 Pure Rustcompiled to WASM
 
@@ -6356,23 +6438,25 @@ If a variable is absent or unparseable, the light theme default is used.
 
 ## Color variables
 
-| CSS Variable                 | Theme field        | Light default            | Dark default             | Description                |
-| ---------------------------- | ------------------ | ------------------------ | ------------------------ | -------------------------- |
-| `--rs-grid-bg`               | `bg`               | `#ffffff`                | `rgb(26,27,38)`          | Cell background            |
-| `--rs-grid-header-bg`        | `header_bg`        | `rgb(248,249,250)`       | `rgb(36,40,59)`          | Header background          |
-| `--rs-grid-header-text`      | `header_text`      | `rgb(24,29,31)`          | `rgb(169,177,214)`       | Header text color          |
-| `--rs-grid-cell-text`        | `cell_text`        | `rgb(24,29,31)`          | `rgb(192,202,245)`       | Cell text color            |
-| `--rs-grid-grid-line`        | `grid_line`        | `rgb(224,224,224)`       | `rgb(42,47,69)`          | Cell border color          |
-| `--rs-grid-header-border`    | `header_border`    | `rgb(186,191,199)`       | `rgb(61,68,102)`         | Header bottom border       |
-| `--rs-grid-selection-fill`   | `selection_fill`   | `rgba(31,119,220,0.18)`  | `rgba(122,162,255,0.2)`  | Selection rectangle fill   |
-| `--rs-grid-selection-border` | `selection_border` | `rgba(31,119,220,0.82)`  | `rgba(122,162,255,0.8)`  | Selection rectangle border |
-| `--rs-grid-scrollbar-track`  | `scrollbar_track`  | `rgb(241,241,241)`       | `rgb(31,35,53)`          | Scrollbar track background |
-| `--rs-grid-scrollbar-thumb`  | `scrollbar_thumb`  | `rgba(100,100,110,0.63)` | `rgba(169,177,214,0.4)`  | Scrollbar thumb color      |
-| `--rs-grid-row-alt-bg`       | `row_alt_bg`       | `rgb(252,252,253)`       | `rgb(30,32,48)`          | Alternating row background |
-| `--rs-grid-row-hover-bg`     | `row_hover_bg`     | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Row hover overlay          |
-| `--rs-grid-search-highlight` | `search_highlight` | `rgba(255,213,0,0.31)`   | `rgba(255,213,0,0.31)`   | Search match highlight     |
-| `--rs-grid-search-current`   | `search_current`   | `rgba(255,165,0,0.55)`   | `rgba(255,165,0,0.55)`   | Current search match       |
-| `--rs-grid-skeleton-fg`      | `skeleton_fg`      | `rgba(200,200,200,0.39)` | `rgba(60,65,90,0.39)`    | Skeleton loading bar color |
+| CSS Variable                 | Theme field        | Light default            | Dark default             | Description                                                                                                        |
+| ---------------------------- | ------------------ | ------------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `--rs-grid-bg`               | `bg`               | `#ffffff`                | `rgb(26,27,38)`          | Cell background                                                                                                    |
+| `--rs-grid-header-bg`        | `header_bg`        | `rgb(248,249,250)`       | `rgb(36,40,59)`          | Header background                                                                                                  |
+| `--rs-grid-header-text`      | `header_text`      | `rgb(24,29,31)`          | `rgb(169,177,214)`       | Header text color                                                                                                  |
+| `--rs-grid-cell-text`        | `cell_text`        | `rgb(24,29,31)`          | `rgb(192,202,245)`       | Cell text color                                                                                                    |
+| `--rs-grid-grid-line`        | `grid_line`        | `rgb(224,224,224)`       | `rgb(42,47,69)`          | Cell border color                                                                                                  |
+| `--rs-grid-header-border`    | `header_border`    | `rgb(186,191,199)`       | `rgb(61,68,102)`         | Header bottom border                                                                                               |
+| `--rs-grid-selection-fill`   | `selection_fill`   | `rgba(31,119,220,0.18)`  | `rgba(122,162,255,0.2)`  | Selection rectangle fill                                                                                           |
+| `--rs-grid-selection-border` | `selection_border` | `rgba(31,119,220,0.82)`  | `rgba(122,162,255,0.8)`  | Selection rectangle border                                                                                         |
+| `--rs-grid-scrollbar-track`  | `scrollbar_track`  | `rgb(241,241,241)`       | `rgb(31,35,53)`          | Scrollbar track background                                                                                         |
+| `--rs-grid-scrollbar-thumb`  | `scrollbar_thumb`  | `rgba(100,100,110,0.63)` | `rgba(169,177,214,0.4)`  | Scrollbar thumb color                                                                                              |
+| `--rs-grid-row-alt-bg`       | `row_alt_bg`       | `rgb(252,252,253)`       | `rgb(30,32,48)`          | Alternating row background                                                                                         |
+| `--rs-grid-row-hover-bg`     | `row_hover_bg`     | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Row hover overlay                                                                                                  |
+| `--rs-grid-locked-cell-bg`   | `locked_cell_bg`   | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Background overlay for a non-editable cell (see [Per-cell editability](/features/editing.md#per-cell-editability)) |
+| `--rs-grid-locked-cell-text` | `locked_cell_text` | `rgba(24,29,31,0.55)`    | `rgba(208,208,208,0.55)` | Text color for a non-editable cell                                                                                 |
+| `--rs-grid-search-highlight` | `search_highlight` | `rgba(255,213,0,0.31)`   | `rgba(255,213,0,0.31)`   | Search match highlight                                                                                             |
+| `--rs-grid-search-current`   | `search_current`   | `rgba(255,165,0,0.55)`   | `rgba(255,165,0,0.55)`   | Current search match                                                                                               |
+| `--rs-grid-skeleton-fg`      | `skeleton_fg`      | `rgba(200,200,200,0.39)` | `rgba(60,65,90,0.39)`    | Skeleton loading bar color                                                                                         |
 
 ## Size & typography variables
 

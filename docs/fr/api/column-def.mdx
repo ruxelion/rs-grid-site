@@ -141,6 +141,50 @@ passé. Retourne le message du premier échec, le cas échéant.
 Voir [Validation](/fr/features/validation) pour `InvalidEditMode` et le
 retour live à chaque frappe.
 
+## EditablePredicate
+
+```rust
+pub struct EditablePredicate(pub Rc<dyn Fn(u64, &GridModel) -> bool>);
+```
+
+Une surcharge dynamique de l'éditabilité par cellule, attachée à
+`ColumnDef.editable_predicate`. Reçoit l'index de ligne et le
+[`GridModel`](/fr/api/grid-model) complet, ce qui lui permet d'implémenter
+une logique inter-colonnes (ex. verrouiller une cellule quand la valeur
+d'une autre colonne est `"locked"`) — pas seulement la valeur de sa propre
+colonne.
+
+```rust
+EditablePredicate::new(|row, model| {
+    model.get_cell(row, "status").as_deref() != Some("locked")
+})
+```
+
+| Méthode | Description |
+|--------|-------------|
+| `new(f)` | Encapsule une closure en prédicat |
+| `is_editable(row: u64, model: &GridModel)` | Exécute le prédicat ; retourne `true`/`false` |
+
+### Sucre syntaxique sur `ColumnDef`
+
+| Méthode | Définit | Retour |
+|--------|------|---------|
+| `.editable_when(f)` | `editable_predicate` | `Self` |
+
+### `ColumnDef::is_cell_editable`
+
+```rust
+pub fn is_cell_editable(&self, row: u64, model: &GridModel) -> bool
+```
+
+Résout si `row` est éditable dans cette colonne : `false` si le flag
+statique `editable` est `false` (le prédicat n'est même pas appelé) ;
+sinon le résultat du prédicat, ou `true` si aucun prédicat n'est défini.
+
+Voir [Verrouillage par cellule](/fr/features/editing#verrouillage-par-cellule)
+pour le guide complet, incluant le curseur `not-allowed` et le style
+thémé des cellules verrouillées.
+
 ## CellEditor
 
 ```rust

@@ -1,178 +1,4 @@
 ---
-url: /fr/getting-started.md
----
-
-# Premiers pas
-
-## Prerequis
-
-- Toolchain Rust (stable, edition 2021)
-- [Trunk](https://trunkrs.dev) pour compiler et servir les applications WASM
-- La cible `wasm32-unknown-unknown`
-
-```bash
-rustup target add wasm32-unknown-unknown
-cargo install trunk
-```
-
-## Demarrage rapide
-
-
-**[object Object]**
-
-Ajoutez `rs-grid-leptos` a votre `Cargo.toml` :
-```toml title="Cargo.toml"
-[dependencies]
-rs-grid-leptos = { path = "../rs-grid-leptos" }
-```
-Importez le composant et montez-le dans une vue Leptos :
-```rust title="src/main.rs"
-use leptos::*;
-use rs_grid_leptos::GridCanvas;
-
-#[component]
-pub fn App() -> impl IntoView {
-    view! {
-        <main style="width: 100vw; height: 100vh;">
-            <GridCanvas
-                rows=1_000_000_u64
-                cols=50_usize
-            />
-        </main>
-    }
-}
-
-fn main() {
-    leptos::mount_to_body(App);
-}
-```
-Lancez l'exemple :
-```bash
-cd examples/basic-leptos
-trunk serve
-```
-
-
-**[object Object]**
-
-Compilez le package WASM :
-```bash
-cd crates/rs-grid-web
-wasm-pack build --target web
-```
-Utilisez-le dans votre HTML :
-```html title="index.html"
-<canvas id="grid" style="width: 100vw; height: 100vh;"></canvas>
-<script type="module">
-  import init, { JsGrid } from './pkg/rs_grid_web.js';
-  await init();
-  const canvas = document.getElementById('grid');
-  const grid = new JsGrid(canvas, 1_000_000, 50);
-</script>
-```
-
-
-**[object Object]**
-
-Ajoutez `rs-grid-dioxus` a votre `Cargo.toml` :
-```toml title="Cargo.toml"
-[dependencies]
-rs-grid-dioxus = { path = "../rs-grid-dioxus" }
-```
-Importez le composant et montez-le dans une application Dioxus :
-```rust title="src/main.rs"
-use dioxus::prelude::*;
-use rs_grid_dioxus::{GridCanvas, ModelSlot};
-use rs_grid_core::model::GridModel;
-
-fn App() -> Element {
-    let model = use_hook(|| {
-        ModelSlot::new(GridModel::new(1_000_000, 50))
-    });
-    rsx! {
-        main { style: "width:100vw;height:100vh;",
-            GridCanvas { model: model.clone() }
-        }
-    }
-}
-
-fn main() {
-    dioxus::launch(App);
-}
-```
-Lancez l'exemple :
-```bash
-cd examples/basic-dioxus
-trunk serve
-```
-
-
-**[object Object]**
-
-Ajoutez `rs-grid-yew` a votre `Cargo.toml` :
-```toml title="Cargo.toml"
-[dependencies]
-rs-grid-yew = { path = "../rs-grid-yew" }
-```
-Importez le composant et montez-le dans une application Yew :
-```rust title="src/main.rs"
-use yew::prelude::*;
-use rs_grid_yew::{GridCanvas, wrap_model};
-use rs_grid_core::model::GridModel;
-
-#[function_component]
-fn App() -> Html {
-    let model = wrap_model(GridModel::new(1_000_000, 50));
-    html! {
-        <main style="width:100vw;height:100vh;">
-            <GridCanvas model={model} />
-        </main>
-    }
-}
-
-fn main() {
-    yew::Renderer::<App>::new().render();
-}
-```
-Lancez l'exemple :
-```bash
-cd examples/basic-yew
-trunk serve
-```
-
-
-Rendez-vous sur `http://localhost:8080`. Vous devriez voir un grid
-affichant 1 million de lignes a 60 fps.
-
-## Compiler pour la production
-
-```bash
-cd examples/basic-leptos
-trunk build --release
-```
-
-La sortie est generee dans `dist/`. Servez-la avec n'importe quel serveur de
-fichiers statiques ou utilisez l'[image Docker](/fr/deployment/docker.md)
-fournie.
-
-## Commandes du workspace
-
-| Commande                                  | Description                                        |
-| ----------------------------------------- | -------------------------------------------------- |
-| `cargo check --workspace`                 | Verification rapide des types pour tous les crates |
-| `cargo test --workspace`                  | Lancer tous les tests unitaires                    |
-| `cargo fmt --all`                         | Formater l'ensemble du workspace                   |
-| `cargo clippy --workspace -- -D warnings` | Lint avec warnings traites comme erreurs           |
-| `trunk serve` (dans le dossier exemple)   | Serveur de dev avec hot reload                     |
-
-:::tip
-`rs-grid-core` n'a aucune dependance WASM — ses tests unitaires s'executent
-avec un simple `cargo test`, sans navigateur.
-:::
-
-
-
----
 url: /fr/api/column-def.md
 ---
 
@@ -315,6 +141,50 @@ passé. Retourne le message du premier échec, le cas échéant.
 
 Voir [Validation](/fr/features/validation.md) pour `InvalidEditMode` et le
 retour live à chaque frappe.
+
+## EditablePredicate
+
+```rust
+pub struct EditablePredicate(pub Rc<dyn Fn(u64, &GridModel) -> bool>);
+```
+
+Une surcharge dynamique de l'éditabilité par cellule, attachée à
+`ColumnDef.editable_predicate`. Reçoit l'index de ligne et le
+[`GridModel`](/fr/api/grid-model.md) complet, ce qui lui permet d'implémenter
+une logique inter-colonnes (ex. verrouiller une cellule quand la valeur
+d'une autre colonne est `"locked"`) — pas seulement la valeur de sa propre
+colonne.
+
+```rust
+EditablePredicate::new(|row, model| {
+    model.get_cell(row, "status").as_deref() != Some("locked")
+})
+```
+
+| Méthode                                    | Description                                   |
+| ------------------------------------------ | --------------------------------------------- |
+| `new(f)`                                   | Encapsule une closure en prédicat             |
+| `is_editable(row: u64, model: &GridModel)` | Exécute le prédicat ; retourne `true`/`false` |
+
+### Sucre syntaxique sur `ColumnDef`
+
+| Méthode             | Définit              | Retour |
+| ------------------- | -------------------- | ------ |
+| `.editable_when(f)` | `editable_predicate` | `Self` |
+
+### `ColumnDef::is_cell_editable`
+
+```rust
+pub fn is_cell_editable(&self, row: u64, model: &GridModel) -> bool
+```
+
+Résout si `row` est éditable dans cette colonne : `false` si le flag
+statique `editable` est `false` (le prédicat n'est même pas appelé) ;
+sinon le résultat du prédicat, ou `true` si aucun prédicat n'est défini.
+
+Voir [Verrouillage par cellule](/fr/features/editing.md#verrouillage-par-cellule)
+pour le guide complet, incluant le curseur `not-allowed` et le style
+thémé des cellules verrouillées.
 
 ## CellEditor
 
@@ -1029,6 +899,8 @@ pub struct Theme {
     pub scrollbar_thumb: Color,
     pub row_alt_bg: Color,
     pub row_hover_bg: Color,
+    pub locked_cell_bg: Color,
+    pub locked_cell_text: Color,
     pub search_highlight: Color,
     pub search_current: Color,
     pub skeleton_fg: Color,
@@ -1061,6 +933,8 @@ pub struct Theme {
 | `scrollbar_thumb`  | `Color` | `rgba(100,100,110,160)` | `rgba(169,177,214,102)` |
 | `row_alt_bg`       | `Color` | `rgb(252,252,253)`      | `rgb(30,32,48)`         |
 | `row_hover_bg`     | `Color` | `rgba(0,0,0,10)`        | `rgba(255,255,255,10)`  |
+| `locked_cell_bg`   | `Color` | `rgba(0,0,0,9)`         | `rgba(255,255,255,10)`  |
+| `locked_cell_text` | `Color` | `rgba(24,29,31,140)`    | `rgba(208,208,208,140)` |
 | `search_highlight` | `Color` | `rgba(255,213,0,80)`    | `rgba(255,213,0,80)`    |
 | `search_current`   | `Color` | `rgba(255,165,0,140)`   | `rgba(255,165,0,140)`   |
 | `skeleton_fg`      | `Color` | `rgba(200,200,200,100)` | `rgba(60,65,90,100)`    |
@@ -3258,6 +3132,43 @@ Même `FnDataSource` (qui n'a pas de `set_cell`) prend en charge l'édition —
 la nouvelle valeur est stockée dans `GridModel::patches`, qui remplace la
 source de données pour cette cellule.
 
+## Verrouillage par cellule
+
+`ColumnDef::editable` verrouille une colonne entière. Pour un contrôle plus
+fin — verrouiller des cellules individuelles selon les données de la
+ligne — définissez un prédicat dynamique avec `.editable_when(...)` :
+
+```rust
+use rs_grid_core::column::ColumnDef;
+
+let notes = ColumnDef::new("notes", "Notes", 160.0).editable_when(
+    |row, model| model.get_cell(row, "status").as_deref() != Some("locked"),
+);
+```
+
+Le prédicat reçoit l'index de ligne et le [`GridModel`](/fr/api/grid-model.md)
+complet, ce qui lui permet de lire la valeur de _n'importe quelle_ colonne
+de cette ligne — pas seulement la sienne — pour décider si une cellule est
+éditable. Ceci reproduit le callback `colDef.editable` d'AG Grid.
+
+Vérifié uniquement quand le flag statique `editable` est `true` — si une
+colonne est en lecture seule statiquement, le prédicat n'est jamais
+appelé :
+
+```
+StartEdit → editable == false ?  → bloqué, prédicat non évalué
+          → editable == true     → editable_when(row, model) ?
+```
+
+Quand une cellule résout à non-éditable, `rs-grid-web` affiche un curseur
+`not-allowed` au survol et rend la cellule avec un fond et une couleur de
+texte thémés (`Theme::locked_cell_bg` / `Theme::locked_cell_text`,
+variables CSS `--rs-grid-locked-cell-bg` / `--rs-grid-locked-cell-text` —
+voir [Theming](/fr/theming/css-variables.md)).
+
+Voir [EditablePredicate](/fr/api/column-def.md#editablepredicate) pour la
+référence complète du type.
+
 ## Validation
 
 `CommitEdit` (ainsi que la commande live `ValidateEdit` déclenchée à chaque
@@ -3750,15 +3661,15 @@ visibles dans le viewport à un instant donné, indépendamment du nombre total 
 
 Time per frame (µs)60fps budget: 16,600 µs
 
-20 cols × 10k rows31.0 µs
+20 cols × 10k rows35.9 µs
 
-50 cols × 1M rows44.1 µs
+50 cols × 1M rows45.4 µs
 
-100 cols × 10M rows54.4 µs
+100 cols × 10M rows55.2 µs
 
-1 000 cols × 1B rows55.3 µs
+1 000 cols × 1B rows57.1 µs
 
-50 cols × 1 quadrillion46.1 µs
+50 cols × 1 quadrillion47.1 µs
 
 All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
 
@@ -3775,17 +3686,17 @@ Varying row count (1 000 cols fixed)
 
 | Configuration | Hit-test time |
 | --- | --- |
-| 1 000 rows, 1 000 cols | 37.2 ns |
-| 1 billion rows, 1 000 cols | 52.7 ns |
-| 1 quadrillion rows, 1 000 cols | 36.1 ns |
+| 1 000 rows, 1 000 cols | 50.0 ns |
+| 1 billion rows, 1 000 cols | 74.3 ns |
+| 1 quadrillion rows, 1 000 cols | 47.4 ns |
 
 Varying column count (O(log n) in action)
 
 | Columns | Hit-test time |
 | --- | --- |
-| 10 cols | 17.6 ns |
-| 100 cols | 18.4 ns |
-| 1 000 cols | 23.1 ns |
+| 10 cols | 19.2 ns |
+| 100 cols | 25.0 ns |
+| 1 000 cols | 32.7 ns |
 
 
 L'augmentation de 1,7× de 10 à 1 000 colonnes (10 → 18 ns) reflète la recherche binaire sur
@@ -3801,11 +3712,11 @@ Varying row count — FnDataSource (20 cols fixed)
 
 | Rows | Init time |
 | --- | --- |
-| 1 000 | 2.7 µs |
+| 1 000 | 2.9 µs |
 | 100 000 | 3.1 µs |
 | 1 000 000 | 3.0 µs |
 | 100 000 000 | 3.0 µs |
-| 1 000 000 000 | 3.0 µs |
+| 1 000 000 000 | 3.1 µs |
 | 1 000 000 000 000 000 | 2.9 µs |
 
 Flat regardless of row count — O(n_cols), not O(n_rows).
@@ -3816,11 +3727,11 @@ Varying column count (1M rows fixed)
 
 20 cols3.0 µs
 
-50 cols7.9 µs
+50 cols8.1 µs
 
-100 cols16.1 µs
+100 cols16.5 µs
 
-1 000 cols157.1 µs
+1 000 cols164.1 µs
 
 Initialiser un grid avec **1 quadrillion de lignes virtuelles** prend les mêmes \~5 µs qu'un
 grid de 1 000 lignes. Si toutes les données sont en mémoire (`VecDataSource`), l'initialisation
@@ -3835,15 +3746,15 @@ cache de clés évite de ré-extraire les valeurs lors d'un toggle de direction 
 
 100 000 rows — sort time (ms)
 
-Numeric sort (cold)21.1 ms
+Numeric sort (cold)17.5 ms
 
 Radix sort, first call — key extraction + sort
 
-Numeric sort (cached)15.6 ms
+Numeric sort (cached)11.9 ms
 
 Radix sort, direction toggle — keys reused from cache
 
-String sort (cold)22.8 ms
+String sort (cold)22.2 ms
 
 Lexicographic comparison sort
 
@@ -3869,7 +3780,7 @@ Pour les grands datasets (> 100k lignes), préférez `FnDataSource` avec paginat
 Voir [FnDataSource](/fr/data/fn-datasource.md) et [PageCache](/fr/data/page-cache.md).
 
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `7d9571a` · July 1, 2026. Updated automatically on every push to `main` via CI.
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `8d8d785` · July 1, 2026. Updated automatically on every push to `main` via CI.
 
 
 
@@ -4605,6 +4516,180 @@ canvas.set_native_validation_tooltip(false);
 
 
 ---
+url: /fr/getting-started.md
+---
+
+# Premiers pas
+
+## Prerequis
+
+- Toolchain Rust (stable, edition 2021)
+- [Trunk](https://trunkrs.dev) pour compiler et servir les applications WASM
+- La cible `wasm32-unknown-unknown`
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo install trunk
+```
+
+## Demarrage rapide
+
+
+**[object Object]**
+
+Ajoutez `rs-grid-leptos` a votre `Cargo.toml` :
+```toml title="Cargo.toml"
+[dependencies]
+rs-grid-leptos = { path = "../rs-grid-leptos" }
+```
+Importez le composant et montez-le dans une vue Leptos :
+```rust title="src/main.rs"
+use leptos::*;
+use rs_grid_leptos::GridCanvas;
+
+#[component]
+pub fn App() -> impl IntoView {
+    view! {
+        <main style="width: 100vw; height: 100vh;">
+            <GridCanvas
+                rows=1_000_000_u64
+                cols=50_usize
+            />
+        </main>
+    }
+}
+
+fn main() {
+    leptos::mount_to_body(App);
+}
+```
+Lancez l'exemple :
+```bash
+cd examples/basic-leptos
+trunk serve
+```
+
+
+**[object Object]**
+
+Compilez le package WASM :
+```bash
+cd crates/rs-grid-web
+wasm-pack build --target web
+```
+Utilisez-le dans votre HTML :
+```html title="index.html"
+<canvas id="grid" style="width: 100vw; height: 100vh;"></canvas>
+<script type="module">
+  import init, { JsGrid } from './pkg/rs_grid_web.js';
+  await init();
+  const canvas = document.getElementById('grid');
+  const grid = new JsGrid(canvas, 1_000_000, 50);
+</script>
+```
+
+
+**[object Object]**
+
+Ajoutez `rs-grid-dioxus` a votre `Cargo.toml` :
+```toml title="Cargo.toml"
+[dependencies]
+rs-grid-dioxus = { path = "../rs-grid-dioxus" }
+```
+Importez le composant et montez-le dans une application Dioxus :
+```rust title="src/main.rs"
+use dioxus::prelude::*;
+use rs_grid_dioxus::{GridCanvas, ModelSlot};
+use rs_grid_core::model::GridModel;
+
+fn App() -> Element {
+    let model = use_hook(|| {
+        ModelSlot::new(GridModel::new(1_000_000, 50))
+    });
+    rsx! {
+        main { style: "width:100vw;height:100vh;",
+            GridCanvas { model: model.clone() }
+        }
+    }
+}
+
+fn main() {
+    dioxus::launch(App);
+}
+```
+Lancez l'exemple :
+```bash
+cd examples/basic-dioxus
+trunk serve
+```
+
+
+**[object Object]**
+
+Ajoutez `rs-grid-yew` a votre `Cargo.toml` :
+```toml title="Cargo.toml"
+[dependencies]
+rs-grid-yew = { path = "../rs-grid-yew" }
+```
+Importez le composant et montez-le dans une application Yew :
+```rust title="src/main.rs"
+use yew::prelude::*;
+use rs_grid_yew::{GridCanvas, wrap_model};
+use rs_grid_core::model::GridModel;
+
+#[function_component]
+fn App() -> Html {
+    let model = wrap_model(GridModel::new(1_000_000, 50));
+    html! {
+        <main style="width:100vw;height:100vh;">
+            <GridCanvas model={model} />
+        </main>
+    }
+}
+
+fn main() {
+    yew::Renderer::<App>::new().render();
+}
+```
+Lancez l'exemple :
+```bash
+cd examples/basic-yew
+trunk serve
+```
+
+
+Rendez-vous sur `http://localhost:8080`. Vous devriez voir un grid
+affichant 1 million de lignes a 60 fps.
+
+## Compiler pour la production
+
+```bash
+cd examples/basic-leptos
+trunk build --release
+```
+
+La sortie est generee dans `dist/`. Servez-la avec n'importe quel serveur de
+fichiers statiques ou utilisez l'[image Docker](/fr/deployment/docker.md)
+fournie.
+
+## Commandes du workspace
+
+| Commande                                  | Description                                        |
+| ----------------------------------------- | -------------------------------------------------- |
+| `cargo check --workspace`                 | Verification rapide des types pour tous les crates |
+| `cargo test --workspace`                  | Lancer tous les tests unitaires                    |
+| `cargo fmt --all`                         | Formater l'ensemble du workspace                   |
+| `cargo clippy --workspace -- -D warnings` | Lint avec warnings traites comme erreurs           |
+| `trunk serve` (dans le dossier exemple)   | Serveur de dev avec hot reload                     |
+
+:::tip
+`rs-grid-core` n'a aucune dependance WASM — ses tests unitaires s'executent
+avec un simple `cargo test`, sans navigateur.
+:::
+
+
+
+---
 url: /fr/howto/custom-theme.md
 ---
 
@@ -5062,9 +5147,9 @@ Un data grid qui ne ralentit jamais. Parcourez des millions de lignes aussi flui
 
 ∞lignes, zéro latence
 
-<45 µspar frame à 60fps
+<46 µspar frame à 60fps
 
-36.1 nshit-test (1 quadrillion de lignes)
+47.4 nshit-test (1 quadrillion de lignes)
 
 100% Rustcompilé en WASM
 
@@ -6385,23 +6470,25 @@ du theme clair est utilisee.
 
 ## Variables de couleur
 
-| Variable CSS                 | Champ Theme        | Defaut clair             | Defaut sombre            | Description                                |
-| ---------------------------- | ------------------ | ------------------------ | ------------------------ | ------------------------------------------ |
-| `--rs-grid-bg`               | `bg`               | `#ffffff`                | `rgb(26,27,38)`          | Arriere-plan des cellules                  |
-| `--rs-grid-header-bg`        | `header_bg`        | `rgb(248,249,250)`       | `rgb(36,40,59)`          | Arriere-plan des en-tetes                  |
-| `--rs-grid-header-text`      | `header_text`      | `rgb(24,29,31)`          | `rgb(169,177,214)`       | Couleur du texte des en-tetes              |
-| `--rs-grid-cell-text`        | `cell_text`        | `rgb(24,29,31)`          | `rgb(192,202,245)`       | Couleur du texte des cellules              |
-| `--rs-grid-grid-line`        | `grid_line`        | `rgb(224,224,224)`       | `rgb(42,47,69)`          | Couleur des bordures de cellules           |
-| `--rs-grid-header-border`    | `header_border`    | `rgb(186,191,199)`       | `rgb(61,68,102)`         | Bordure inferieure des en-tetes            |
-| `--rs-grid-selection-fill`   | `selection_fill`   | `rgba(31,119,220,0.18)`  | `rgba(122,162,255,0.2)`  | Remplissage du rectangle de selection      |
-| `--rs-grid-selection-border` | `selection_border` | `rgba(31,119,220,0.82)`  | `rgba(122,162,255,0.8)`  | Bordure du rectangle de selection          |
-| `--rs-grid-scrollbar-track`  | `scrollbar_track`  | `rgb(241,241,241)`       | `rgb(31,35,53)`          | Arriere-plan de la piste de la scrollbar   |
-| `--rs-grid-scrollbar-thumb`  | `scrollbar_thumb`  | `rgba(100,100,110,0.63)` | `rgba(169,177,214,0.4)`  | Couleur du curseur de la scrollbar         |
-| `--rs-grid-row-alt-bg`       | `row_alt_bg`       | `rgb(252,252,253)`       | `rgb(30,32,48)`          | Arriere-plan des lignes alternees          |
-| `--rs-grid-row-hover-bg`     | `row_hover_bg`     | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Superposition au survol des lignes         |
-| `--rs-grid-search-highlight` | `search_highlight` | `rgba(255,213,0,0.31)`   | `rgba(255,213,0,0.31)`   | Surlignage des resultats de recherche      |
-| `--rs-grid-search-current`   | `search_current`   | `rgba(255,165,0,0.55)`   | `rgba(255,165,0,0.55)`   | Resultat de recherche actuel               |
-| `--rs-grid-skeleton-fg`      | `skeleton_fg`      | `rgba(200,200,200,0.39)` | `rgba(60,65,90,0.39)`    | Couleur de la barre de chargement skeleton |
+| Variable CSS                 | Champ Theme        | Defaut clair             | Defaut sombre            | Description                                                                                                                             |
+| ---------------------------- | ------------------ | ------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `--rs-grid-bg`               | `bg`               | `#ffffff`                | `rgb(26,27,38)`          | Arriere-plan des cellules                                                                                                               |
+| `--rs-grid-header-bg`        | `header_bg`        | `rgb(248,249,250)`       | `rgb(36,40,59)`          | Arriere-plan des en-tetes                                                                                                               |
+| `--rs-grid-header-text`      | `header_text`      | `rgb(24,29,31)`          | `rgb(169,177,214)`       | Couleur du texte des en-tetes                                                                                                           |
+| `--rs-grid-cell-text`        | `cell_text`        | `rgb(24,29,31)`          | `rgb(192,202,245)`       | Couleur du texte des cellules                                                                                                           |
+| `--rs-grid-grid-line`        | `grid_line`        | `rgb(224,224,224)`       | `rgb(42,47,69)`          | Couleur des bordures de cellules                                                                                                        |
+| `--rs-grid-header-border`    | `header_border`    | `rgb(186,191,199)`       | `rgb(61,68,102)`         | Bordure inferieure des en-tetes                                                                                                         |
+| `--rs-grid-selection-fill`   | `selection_fill`   | `rgba(31,119,220,0.18)`  | `rgba(122,162,255,0.2)`  | Remplissage du rectangle de selection                                                                                                   |
+| `--rs-grid-selection-border` | `selection_border` | `rgba(31,119,220,0.82)`  | `rgba(122,162,255,0.8)`  | Bordure du rectangle de selection                                                                                                       |
+| `--rs-grid-scrollbar-track`  | `scrollbar_track`  | `rgb(241,241,241)`       | `rgb(31,35,53)`          | Arriere-plan de la piste de la scrollbar                                                                                                |
+| `--rs-grid-scrollbar-thumb`  | `scrollbar_thumb`  | `rgba(100,100,110,0.63)` | `rgba(169,177,214,0.4)`  | Couleur du curseur de la scrollbar                                                                                                      |
+| `--rs-grid-row-alt-bg`       | `row_alt_bg`       | `rgb(252,252,253)`       | `rgb(30,32,48)`          | Arriere-plan des lignes alternees                                                                                                       |
+| `--rs-grid-row-hover-bg`     | `row_hover_bg`     | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Superposition au survol des lignes                                                                                                      |
+| `--rs-grid-locked-cell-bg`   | `locked_cell_bg`   | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Superposition de fond pour une cellule non-editable (voir [Verrouillage par cellule](/fr/features/editing.md#verrouillage-par-cellule)) |
+| `--rs-grid-locked-cell-text` | `locked_cell_text` | `rgba(24,29,31,0.55)`    | `rgba(208,208,208,0.55)` | Couleur du texte pour une cellule non-editable                                                                                          |
+| `--rs-grid-search-highlight` | `search_highlight` | `rgba(255,213,0,0.31)`   | `rgba(255,213,0,0.31)`   | Surlignage des resultats de recherche                                                                                                   |
+| `--rs-grid-search-current`   | `search_current`   | `rgba(255,165,0,0.55)`   | `rgba(255,165,0,0.55)`   | Resultat de recherche actuel                                                                                                            |
+| `--rs-grid-skeleton-fg`      | `skeleton_fg`      | `rgba(200,200,200,0.39)` | `rgba(60,65,90,0.39)`    | Couleur de la barre de chargement skeleton                                                                                              |
 
 ## Variables de taille et typographie
 

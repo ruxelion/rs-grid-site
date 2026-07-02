@@ -9,9 +9,9 @@ Un data grid qui ne ralentit jamais. Parcourez des millions de lignes aussi flui
 
 ∞lignes, zéro latence
 
-<45 µspar frame à 60fps
+<46 µspar frame à 60fps
 
-36.1 nshit-test (1 quadrillion de lignes)
+47.4 nshit-test (1 quadrillion de lignes)
 
 100% Rustcompilé en WASM
 

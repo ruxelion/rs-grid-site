@@ -104,6 +104,42 @@ to undo or **Ctrl+Y** to redo. See [Undo & Redo](/features/undo-redo.md) for det
 Even `FnDataSource` (which has no `set_cell`) supports editing — the new value
 is stored in `GridModel::patches`, which overrides the data source for that cell.
 
+## Per-cell editability
+
+`ColumnDef::editable` locks an entire column. For finer control — locking
+individual cells based on row data — set a dynamic predicate with
+`.editable_when(...)`:
+
+```rust
+use rs_grid_core::column::ColumnDef;
+
+let notes = ColumnDef::new("notes", "Notes", 160.0).editable_when(
+    |row, model| model.get_cell(row, "status").as_deref() != Some("locked"),
+);
+```
+
+The predicate receives the row index and the full [`GridModel`](/api/grid-model.md),
+so it can read _any_ column's value for that row — not just its own — to
+decide whether a cell is editable. This mirrors AG Grid's
+`colDef.editable` callback.
+
+Checked only when the static `editable` flag is `true` — if a column is
+statically read-only, the predicate is never called:
+
+```
+StartEdit → editable == false?  → blocked, predicate not evaluated
+          → editable == true    → editable_when(row, model)?
+```
+
+When a cell resolves to non-editable, `rs-grid-web` shows a `not-allowed`
+cursor on hover and renders the cell with a themed locked-cell background
+and text color (`Theme::locked_cell_bg` / `Theme::locked_cell_text`, CSS
+variables `--rs-grid-locked-cell-bg` / `--rs-grid-locked-cell-text` — see
+[Theming](/theming/css-variables.md)).
+
+See [EditablePredicate](/api/column-def.md#editablepredicate) for the full
+type reference.
+
 ## Validation
 
 `CommitEdit` (and the live `ValidateEdit` command fired on every keystroke)

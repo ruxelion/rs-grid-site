@@ -108,6 +108,43 @@ Même `FnDataSource` (qui n'a pas de `set_cell`) prend en charge l'édition —
 la nouvelle valeur est stockée dans `GridModel::patches`, qui remplace la
 source de données pour cette cellule.
 
+## Verrouillage par cellule
+
+`ColumnDef::editable` verrouille une colonne entière. Pour un contrôle plus
+fin — verrouiller des cellules individuelles selon les données de la
+ligne — définissez un prédicat dynamique avec `.editable_when(...)` :
+
+```rust
+use rs_grid_core::column::ColumnDef;
+
+let notes = ColumnDef::new("notes", "Notes", 160.0).editable_when(
+    |row, model| model.get_cell(row, "status").as_deref() != Some("locked"),
+);
+```
+
+Le prédicat reçoit l'index de ligne et le [`GridModel`](/fr/api/grid-model.md)
+complet, ce qui lui permet de lire la valeur de _n'importe quelle_ colonne
+de cette ligne — pas seulement la sienne — pour décider si une cellule est
+éditable. Ceci reproduit le callback `colDef.editable` d'AG Grid.
+
+Vérifié uniquement quand le flag statique `editable` est `true` — si une
+colonne est en lecture seule statiquement, le prédicat n'est jamais
+appelé :
+
+```
+StartEdit → editable == false ?  → bloqué, prédicat non évalué
+          → editable == true     → editable_when(row, model) ?
+```
+
+Quand une cellule résout à non-éditable, `rs-grid-web` affiche un curseur
+`not-allowed` au survol et rend la cellule avec un fond et une couleur de
+texte thémés (`Theme::locked_cell_bg` / `Theme::locked_cell_text`,
+variables CSS `--rs-grid-locked-cell-bg` / `--rs-grid-locked-cell-text` —
+voir [Theming](/fr/theming/css-variables.md)).
+
+Voir [EditablePredicate](/fr/api/column-def.md#editablepredicate) pour la
+référence complète du type.
+
 ## Validation
 
 `CommitEdit` (ainsi que la commande live `ValidateEdit` déclenchée à chaque
