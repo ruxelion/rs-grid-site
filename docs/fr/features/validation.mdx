@@ -250,6 +250,39 @@ partir de la valeur actuelle de la cellule.
 Un `invalid_cell_border` transparent (alpha `0`) désactive entièrement
 l'indicateur, même convention que `locked_cell_bg`.
 
+## Info-bulle au survol des cellules invalides
+
+Survoler une cellule invalide au repos affiche une info-bulle — un seul
+élément DOM réutilisé pour toutes les cellules (pas un par cellule
+invalide, donc le coût est identique qu'il y ait une seule cellule
+invalide ou des milliers), positionné automatiquement sur la cellule
+survolée. rs-grid ne dessine aucun visuel par défaut : la classe est
+entièrement à vous, ce qui permet de reproduire directement l'info-bulle
+de daisyUI :
+
+```rust
+canvas.set_validation_tooltip_class(Some(
+    "tooltip tooltip-open tooltip-error".into(),
+));
+```
+
+`tooltip-open` (ou un modificateur équivalent toujours ouvert) est
+indispensable — cet élément ne reçoit jamais de vrai `:hover` de la souris
+(il est posé au-dessus du canvas avec `pointer-events: none`), donc rs-grid
+gère lui-même l'ouverture/fermeture via son propre attribut `display`
+plutôt que de compter sur `:hover` en CSS. Sans classe configurée,
+l'élément existe mais reste invisible.
+
+Le message de validation est exposé via l'attribut standard `data-tip`,
+que daisyUI (et tout CSS utilisant `content: attr(data-tip)`) lit
+directement — inutile de dupliquer le texte du message soi-même.
+
+Pour vérifier la validité au repos d'une cellule en dehors du survol (par
+exemple pour un indicateur personnalisé), utilisez
+`canvas.cell_validation_error(row, col_key) -> Option<String>` —
+indépendant de toute session d'édition active, contrairement à
+`validation_error()` plus haut.
+
 ## Validation au collage
 
 `GridCommand::PasteAt` valide chaque valeur entrante avant de l'écrire dans
