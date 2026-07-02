@@ -19,6 +19,16 @@ every PR. The `.claude/hooks/typecheck.py` PostToolUse hook also runs
 `biome check --write` on each edited `.ts`/`.tsx` file, blocking the turn
 (exit 2) if real lint errors remain after the auto-fix.
 
+## Before coding
+
+<!-- keep in sync with the "Before coding" section in every other repo's AGENTS.md -->
+**Plan before coding non-trivial changes.** For a change that touches more
+than one file, alters the theme/component structure, or isn't an obvious
+one-liner, propose a short plan (approach, files touched, trade-offs) before
+writing code — use Claude Code's Plan Mode rather than diving straight into
+edits. Skip this for trivial fixes; planning every one-line change only adds
+friction.
+
 ## Documentation
 
 - rs-grid API & concepts (public, no build needed): https://rs-grid.com/llms.txt
