@@ -19,6 +19,8 @@ pub struct Theme {
     pub row_hover_bg: Color,
     pub locked_cell_bg: Color,
     pub locked_cell_text: Color,
+    pub invalid_cell_border: Color,
+    pub invalid_cell_border_width: f64,
     pub search_highlight: Color,
     pub search_current: Color,
     pub skeleton_fg: Color,
@@ -37,31 +39,33 @@ pub struct Theme {
 
 ## All fields
 
-| Field              | Type    | Light default           | Dark default            |
-| ------------------ | ------- | ----------------------- | ----------------------- |
-| `bg`               | `Color` | `rgb(255,255,255)`      | `rgb(26,27,38)`         |
-| `header_bg`        | `Color` | `rgb(248,249,250)`      | `rgb(36,40,59)`         |
-| `header_text`      | `Color` | `rgb(24,29,31)`         | `rgb(169,177,214)`      |
-| `cell_text`        | `Color` | `rgb(24,29,31)`         | `rgb(192,202,245)`      |
-| `grid_line`        | `Color` | `rgb(224,224,224)`      | `rgb(42,47,69)`         |
-| `header_border`    | `Color` | `rgb(186,191,199)`      | `rgb(61,68,102)`        |
-| `selection_fill`   | `Color` | `rgba(31,119,220,46)`   | `rgba(122,162,255,51)`  |
-| `selection_border` | `Color` | `rgba(31,119,220,210)`  | `rgba(122,162,255,204)` |
-| `scrollbar_track`  | `Color` | `rgb(241,241,241)`      | `rgb(31,35,53)`         |
-| `scrollbar_thumb`  | `Color` | `rgba(100,100,110,160)` | `rgba(169,177,214,102)` |
-| `row_alt_bg`       | `Color` | `rgb(252,252,253)`      | `rgb(30,32,48)`         |
-| `row_hover_bg`     | `Color` | `rgba(0,0,0,10)`        | `rgba(255,255,255,10)`  |
-| `locked_cell_bg`   | `Color` | `rgba(0,0,0,9)`         | `rgba(255,255,255,10)`  |
-| `locked_cell_text` | `Color` | `rgba(24,29,31,140)`    | `rgba(208,208,208,140)` |
-| `search_highlight` | `Color` | `rgba(255,213,0,80)`    | `rgba(255,213,0,80)`    |
-| `search_current`   | `Color` | `rgba(255,165,0,140)`   | `rgba(255,165,0,140)`   |
-| `skeleton_fg`      | `Color` | `rgba(200,200,200,100)` | `rgba(60,65,90,100)`    |
-| `font_size`        | `f64`   | `14.0`                  | `14.0`                  |
-| `header_font_size` | `f64`   | `12.0`                  | `13.0`                  |
-| `header_font_bold` | `bool`  | `true`                  | `true`                  |
-| `cell_padding`     | `f64`   | `10.0`                  | `10.0`                  |
-| `scrollbar_width`  | `f64`   | `14.0`                  | `14.0`                  |
-| `scrollbar_radius` | `f64`   | `4.0`                   | `4.0`                   |
+| Field                       | Type    | Light default           | Dark default            |
+| --------------------------- | ------- | ----------------------- | ----------------------- |
+| `bg`                        | `Color` | `rgb(255,255,255)`      | `rgb(26,27,38)`         |
+| `header_bg`                 | `Color` | `rgb(248,249,250)`      | `rgb(36,40,59)`         |
+| `header_text`               | `Color` | `rgb(24,29,31)`         | `rgb(169,177,214)`      |
+| `cell_text`                 | `Color` | `rgb(24,29,31)`         | `rgb(192,202,245)`      |
+| `grid_line`                 | `Color` | `rgb(224,224,224)`      | `rgb(42,47,69)`         |
+| `header_border`             | `Color` | `rgb(186,191,199)`      | `rgb(61,68,102)`        |
+| `selection_fill`            | `Color` | `rgba(31,119,220,46)`   | `rgba(122,162,255,51)`  |
+| `selection_border`          | `Color` | `rgba(31,119,220,210)`  | `rgba(122,162,255,204)` |
+| `scrollbar_track`           | `Color` | `rgb(241,241,241)`      | `rgb(31,35,53)`         |
+| `scrollbar_thumb`           | `Color` | `rgba(100,100,110,160)` | `rgba(169,177,214,102)` |
+| `row_alt_bg`                | `Color` | `rgb(252,252,253)`      | `rgb(30,32,48)`         |
+| `row_hover_bg`              | `Color` | `rgba(0,0,0,10)`        | `rgba(255,255,255,10)`  |
+| `locked_cell_bg`            | `Color` | `rgba(0,0,0,9)`         | `rgba(255,255,255,10)`  |
+| `locked_cell_text`          | `Color` | `rgba(24,29,31,140)`    | `rgba(208,208,208,140)` |
+| `invalid_cell_border`       | `Color` | `rgb(239,68,68)`        | `rgb(220,38,38)`        |
+| `invalid_cell_border_width` | `f64`   | `1.5`                   | `1.5`                   |
+| `search_highlight`          | `Color` | `rgba(255,213,0,80)`    | `rgba(255,213,0,80)`    |
+| `search_current`            | `Color` | `rgba(255,165,0,140)`   | `rgba(255,165,0,140)`   |
+| `skeleton_fg`               | `Color` | `rgba(200,200,200,100)` | `rgba(60,65,90,100)`    |
+| `font_size`                 | `f64`   | `14.0`                  | `14.0`                  |
+| `header_font_size`          | `f64`   | `12.0`                  | `13.0`                  |
+| `header_font_bold`          | `bool`  | `true`                  | `true`                  |
+| `cell_padding`              | `f64`   | `10.0`                  | `10.0`                  |
+| `scrollbar_width`           | `f64`   | `14.0`                  | `14.0`                  |
+| `scrollbar_radius`          | `f64`   | `4.0`                   | `4.0`                   |
 
 ## Constructors
 

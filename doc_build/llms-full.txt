@@ -1070,6 +1070,8 @@ pub struct Theme {
     pub row_hover_bg: Color,
     pub locked_cell_bg: Color,
     pub locked_cell_text: Color,
+    pub invalid_cell_border: Color,
+    pub invalid_cell_border_width: f64,
     pub search_highlight: Color,
     pub search_current: Color,
     pub skeleton_fg: Color,
@@ -1088,31 +1090,33 @@ pub struct Theme {
 
 ## All fields
 
-| Field              | Type    | Light default           | Dark default            |
-| ------------------ | ------- | ----------------------- | ----------------------- |
-| `bg`               | `Color` | `rgb(255,255,255)`      | `rgb(26,27,38)`         |
-| `header_bg`        | `Color` | `rgb(248,249,250)`      | `rgb(36,40,59)`         |
-| `header_text`      | `Color` | `rgb(24,29,31)`         | `rgb(169,177,214)`      |
-| `cell_text`        | `Color` | `rgb(24,29,31)`         | `rgb(192,202,245)`      |
-| `grid_line`        | `Color` | `rgb(224,224,224)`      | `rgb(42,47,69)`         |
-| `header_border`    | `Color` | `rgb(186,191,199)`      | `rgb(61,68,102)`        |
-| `selection_fill`   | `Color` | `rgba(31,119,220,46)`   | `rgba(122,162,255,51)`  |
-| `selection_border` | `Color` | `rgba(31,119,220,210)`  | `rgba(122,162,255,204)` |
-| `scrollbar_track`  | `Color` | `rgb(241,241,241)`      | `rgb(31,35,53)`         |
-| `scrollbar_thumb`  | `Color` | `rgba(100,100,110,160)` | `rgba(169,177,214,102)` |
-| `row_alt_bg`       | `Color` | `rgb(252,252,253)`      | `rgb(30,32,48)`         |
-| `row_hover_bg`     | `Color` | `rgba(0,0,0,10)`        | `rgba(255,255,255,10)`  |
-| `locked_cell_bg`   | `Color` | `rgba(0,0,0,9)`         | `rgba(255,255,255,10)`  |
-| `locked_cell_text` | `Color` | `rgba(24,29,31,140)`    | `rgba(208,208,208,140)` |
-| `search_highlight` | `Color` | `rgba(255,213,0,80)`    | `rgba(255,213,0,80)`    |
-| `search_current`   | `Color` | `rgba(255,165,0,140)`   | `rgba(255,165,0,140)`   |
-| `skeleton_fg`      | `Color` | `rgba(200,200,200,100)` | `rgba(60,65,90,100)`    |
-| `font_size`        | `f64`   | `14.0`                  | `14.0`                  |
-| `header_font_size` | `f64`   | `12.0`                  | `13.0`                  |
-| `header_font_bold` | `bool`  | `true`                  | `true`                  |
-| `cell_padding`     | `f64`   | `10.0`                  | `10.0`                  |
-| `scrollbar_width`  | `f64`   | `14.0`                  | `14.0`                  |
-| `scrollbar_radius` | `f64`   | `4.0`                   | `4.0`                   |
+| Field                       | Type    | Light default           | Dark default            |
+| --------------------------- | ------- | ----------------------- | ----------------------- |
+| `bg`                        | `Color` | `rgb(255,255,255)`      | `rgb(26,27,38)`         |
+| `header_bg`                 | `Color` | `rgb(248,249,250)`      | `rgb(36,40,59)`         |
+| `header_text`               | `Color` | `rgb(24,29,31)`         | `rgb(169,177,214)`      |
+| `cell_text`                 | `Color` | `rgb(24,29,31)`         | `rgb(192,202,245)`      |
+| `grid_line`                 | `Color` | `rgb(224,224,224)`      | `rgb(42,47,69)`         |
+| `header_border`             | `Color` | `rgb(186,191,199)`      | `rgb(61,68,102)`        |
+| `selection_fill`            | `Color` | `rgba(31,119,220,46)`   | `rgba(122,162,255,51)`  |
+| `selection_border`          | `Color` | `rgba(31,119,220,210)`  | `rgba(122,162,255,204)` |
+| `scrollbar_track`           | `Color` | `rgb(241,241,241)`      | `rgb(31,35,53)`         |
+| `scrollbar_thumb`           | `Color` | `rgba(100,100,110,160)` | `rgba(169,177,214,102)` |
+| `row_alt_bg`                | `Color` | `rgb(252,252,253)`      | `rgb(30,32,48)`         |
+| `row_hover_bg`              | `Color` | `rgba(0,0,0,10)`        | `rgba(255,255,255,10)`  |
+| `locked_cell_bg`            | `Color` | `rgba(0,0,0,9)`         | `rgba(255,255,255,10)`  |
+| `locked_cell_text`          | `Color` | `rgba(24,29,31,140)`    | `rgba(208,208,208,140)` |
+| `invalid_cell_border`       | `Color` | `rgb(239,68,68)`        | `rgb(220,38,38)`        |
+| `invalid_cell_border_width` | `f64`   | `1.5`                   | `1.5`                   |
+| `search_highlight`          | `Color` | `rgba(255,213,0,80)`    | `rgba(255,213,0,80)`    |
+| `search_current`            | `Color` | `rgba(255,165,0,140)`   | `rgba(255,165,0,140)`   |
+| `skeleton_fg`               | `Color` | `rgba(200,200,200,100)` | `rgba(60,65,90,100)`    |
+| `font_size`                 | `f64`   | `14.0`                  | `14.0`                  |
+| `header_font_size`          | `f64`   | `12.0`                  | `13.0`                  |
+| `header_font_bold`          | `bool`  | `true`                  | `true`                  |
+| `cell_padding`              | `f64`   | `10.0`                  | `10.0`                  |
+| `scrollbar_width`           | `f64`   | `14.0`                  | `14.0`                  |
+| `scrollbar_radius`          | `f64`   | `4.0`                   | `4.0`                   |
 
 ## Constructors
 
@@ -3779,15 +3783,15 @@ viewport at any moment, regardless of how many rows exist in the datasource.
 
 Time per frame (µs)60fps budget: 16,600 µs
 
-20 cols × 10k rows27.8 µs
+20 cols × 10k rows35.9 µs
 
-50 cols × 1M rows35.0 µs
+50 cols × 1M rows46.0 µs
 
-100 cols × 10M rows43.4 µs
+100 cols × 10M rows56.8 µs
 
-1 000 cols × 1B rows44.5 µs
+1 000 cols × 1B rows58.3 µs
 
-50 cols × 1 quadrillion36.0 µs
+50 cols × 1 quadrillion49.1 µs
 
 All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
 
@@ -3803,17 +3807,17 @@ Varying row count (1 000 cols fixed)
 
 | Configuration | Hit-test time |
 | --- | --- |
-| 1 000 rows, 1 000 cols | 38.7 ns |
-| 1 billion rows, 1 000 cols | 56.4 ns |
-| 1 quadrillion rows, 1 000 cols | 36.9 ns |
+| 1 000 rows, 1 000 cols | 65.7 ns |
+| 1 billion rows, 1 000 cols | 77.8 ns |
+| 1 quadrillion rows, 1 000 cols | 62.9 ns |
 
 Varying column count (O(log n) in action)
 
 | Columns | Hit-test time |
 | --- | --- |
-| 10 cols | 14.5 ns |
-| 100 cols | 19.2 ns |
-| 1 000 cols | 25.6 ns |
+| 10 cols | 21.8 ns |
+| 100 cols | 28.5 ns |
+| 1 000 cols | 35.5 ns |
 
 
 The 1.7× increase from 10 → 1 000 columns (10 → 18 ns) reflects the binary search over column
@@ -3829,26 +3833,26 @@ Varying row count — FnDataSource (20 cols fixed)
 
 | Rows | Init time |
 | --- | --- |
-| 1 000 | 2.3 µs |
-| 100 000 | 2.4 µs |
-| 1 000 000 | 2.4 µs |
-| 100 000 000 | 2.4 µs |
-| 1 000 000 000 | 2.4 µs |
-| 1 000 000 000 000 000 | 2.3 µs |
+| 1 000 | 3.0 µs |
+| 100 000 | 3.2 µs |
+| 1 000 000 | 3.1 µs |
+| 100 000 000 | 3.1 µs |
+| 1 000 000 000 | 3.2 µs |
+| 1 000 000 000 000 000 | 3.1 µs |
 
 Flat regardless of row count — O(n_cols), not O(n_rows).
 
 Varying column count (1M rows fixed)
 
-5 cols0.6 µs
+5 cols0.7 µs
 
-20 cols2.3 µs
+20 cols3.1 µs
 
-50 cols6.3 µs
+50 cols8.2 µs
 
-100 cols12.8 µs
+100 cols17.0 µs
 
-1 000 cols129.0 µs
+1 000 cols164.5 µs
 
 Initializing a grid with **1 quadrillion virtual rows** takes the same \~5 µs as a grid with
 1 000 rows. If you need all data in memory (`VecDataSource`), initialization is still dominated
@@ -3863,15 +3867,15 @@ sort direction on the same column.
 
 100 000 rows — sort time (ms)
 
-Numeric sort (cold)13.3 ms
+Numeric sort (cold)17.2 ms
 
 Radix sort, first call — key extraction + sort
 
-Numeric sort (cached)9.5 ms
+Numeric sort (cached)12.4 ms
 
 Radix sort, direction toggle — keys reused from cache
 
-String sort (cold)17.7 ms
+String sort (cold)21.1 ms
 
 Lexicographic comparison sort
 
@@ -3896,7 +3900,7 @@ For large datasets (> 100k rows), prefer `FnDataSource` with server-side paginat
 See [FnDataSource](/data/fn-datasource.md) and [PageCache](/data/page-cache.md) for implementation details.
 
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `912f9e0` · July 2, 2026. Updated automatically on every push to `main` via CI.
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `5c135ca` · July 2, 2026. Updated automatically on every push to `main` via CI.
 
 
 
@@ -4393,7 +4397,10 @@ StartEdit → user types → ValidateEdit (every keystroke, live) → CommitEdit
 
 Validation is enforced inside `GridState::apply`, not just at the UI layer —
 so it holds for every consumer (native tests, the canvas renderer, any
-future custom renderer).
+future custom renderer). It's also checked outside an edit session: pasting
+skips invalid target cells (see _Paste validation_ below), and the canvas
+renderer flags any cell whose current value fails validation even when it's
+never been edited (see _At-rest indicator_ below).
 
 ## Adding rules
 
@@ -4594,6 +4601,29 @@ if let Some((row, col_key, message)) = canvas.validation_error() {
 Returns `None` if `col_key` doesn't exist. It's geometry only — it doesn't
 check whether the cell is currently scrolled into view.
 
+## At-rest indicator
+
+A cell can be invalid without ever being edited — e.g. loaded that way from
+the data source. The canvas renderer checks every visible cell's current
+value against `ColumnDef::validate_value` and, on failure, draws a themed
+border (`Theme::invalid_cell_border` / `--rs-grid-invalid-cell-border`)
+around it — no click or edit session required. This is separate from (and
+doesn't wait for) the inline editor's invalid style described above; it
+fires purely from the cell's current value.
+
+Transparent `invalid_cell_border` (alpha `0`) disables the indicator
+entirely, same convention as `locked_cell_bg`.
+
+## Paste validation
+
+`GridCommand::PasteAt` validates each target cell's incoming value before
+writing it — a cell whose pasted value fails validation is silently skipped
+(the write doesn't happen), while the rest of the pasted block still
+applies. This mirrors how Excel and AG Grid handle the same case: neither
+blocks a paste outright, and when a rejection exists it's always per-cell,
+never all-or-nothing. `CutSelection` is unaffected, since it only ever
+writes an empty string.
+
 ## Native `title` tooltip fallback
 
 By default, the inline edit `<input>` gets a native `title` attribute
@@ -4607,8 +4637,10 @@ canvas.set_native_validation_tooltip(false);
 
 ## Behaviour
 
-- Validation runs **only on user edits** (`CommitEdit` / `ValidateEdit`).
-  Programmatic writes via `GridModel::set_cell` bypass it.
+- Validation runs on user edits (`CommitEdit` / `ValidateEdit`) and on
+  `PasteAt` (see _Paste validation_ above). Direct programmatic writes via
+  `GridModel::set_cell` still bypass it — that's the lowest-level API and
+  intentionally has no validation layer of its own.
 - `Select` editors are validated too — the selected option's value is
   checked like any other.
 - Rules and the legacy validator are **synchronous**. For async validation
@@ -5134,9 +5166,9 @@ A data grid that never slows down. Scroll through millions of rows as smoothly a
 
 ∞rows, zero lag
 
-<35 µsper frame at 60fps
+<46 µsper frame at 60fps
 
-36.9 nshit-test (1 quadrillion rows)
+62.9 nshit-test (1 quadrillion rows)
 
 Pure Rustcompiled to WASM
 
@@ -6438,36 +6470,38 @@ If a variable is absent or unparseable, the light theme default is used.
 
 ## Color variables
 
-| CSS Variable                 | Theme field        | Light default            | Dark default             | Description                                                                                                        |
-| ---------------------------- | ------------------ | ------------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `--rs-grid-bg`               | `bg`               | `#ffffff`                | `rgb(26,27,38)`          | Cell background                                                                                                    |
-| `--rs-grid-header-bg`        | `header_bg`        | `rgb(248,249,250)`       | `rgb(36,40,59)`          | Header background                                                                                                  |
-| `--rs-grid-header-text`      | `header_text`      | `rgb(24,29,31)`          | `rgb(169,177,214)`       | Header text color                                                                                                  |
-| `--rs-grid-cell-text`        | `cell_text`        | `rgb(24,29,31)`          | `rgb(192,202,245)`       | Cell text color                                                                                                    |
-| `--rs-grid-grid-line`        | `grid_line`        | `rgb(224,224,224)`       | `rgb(42,47,69)`          | Cell border color                                                                                                  |
-| `--rs-grid-header-border`    | `header_border`    | `rgb(186,191,199)`       | `rgb(61,68,102)`         | Header bottom border                                                                                               |
-| `--rs-grid-selection-fill`   | `selection_fill`   | `rgba(31,119,220,0.18)`  | `rgba(122,162,255,0.2)`  | Selection rectangle fill                                                                                           |
-| `--rs-grid-selection-border` | `selection_border` | `rgba(31,119,220,0.82)`  | `rgba(122,162,255,0.8)`  | Selection rectangle border                                                                                         |
-| `--rs-grid-scrollbar-track`  | `scrollbar_track`  | `rgb(241,241,241)`       | `rgb(31,35,53)`          | Scrollbar track background                                                                                         |
-| `--rs-grid-scrollbar-thumb`  | `scrollbar_thumb`  | `rgba(100,100,110,0.63)` | `rgba(169,177,214,0.4)`  | Scrollbar thumb color                                                                                              |
-| `--rs-grid-row-alt-bg`       | `row_alt_bg`       | `rgb(252,252,253)`       | `rgb(30,32,48)`          | Alternating row background                                                                                         |
-| `--rs-grid-row-hover-bg`     | `row_hover_bg`     | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Row hover overlay                                                                                                  |
-| `--rs-grid-locked-cell-bg`   | `locked_cell_bg`   | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Background overlay for a non-editable cell (see [Per-cell editability](/features/editing.md#per-cell-editability)) |
-| `--rs-grid-locked-cell-text` | `locked_cell_text` | `rgba(24,29,31,0.55)`    | `rgba(208,208,208,0.55)` | Text color for a non-editable cell                                                                                 |
-| `--rs-grid-search-highlight` | `search_highlight` | `rgba(255,213,0,0.31)`   | `rgba(255,213,0,0.31)`   | Search match highlight                                                                                             |
-| `--rs-grid-search-current`   | `search_current`   | `rgba(255,165,0,0.55)`   | `rgba(255,165,0,0.55)`   | Current search match                                                                                               |
-| `--rs-grid-skeleton-fg`      | `skeleton_fg`      | `rgba(200,200,200,0.39)` | `rgba(60,65,90,0.39)`    | Skeleton loading bar color                                                                                         |
+| CSS Variable                    | Theme field           | Light default            | Dark default             | Description                                                                                                            |
+| ------------------------------- | --------------------- | ------------------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `--rs-grid-bg`                  | `bg`                  | `#ffffff`                | `rgb(26,27,38)`          | Cell background                                                                                                        |
+| `--rs-grid-header-bg`           | `header_bg`           | `rgb(248,249,250)`       | `rgb(36,40,59)`          | Header background                                                                                                      |
+| `--rs-grid-header-text`         | `header_text`         | `rgb(24,29,31)`          | `rgb(169,177,214)`       | Header text color                                                                                                      |
+| `--rs-grid-cell-text`           | `cell_text`           | `rgb(24,29,31)`          | `rgb(192,202,245)`       | Cell text color                                                                                                        |
+| `--rs-grid-grid-line`           | `grid_line`           | `rgb(224,224,224)`       | `rgb(42,47,69)`          | Cell border color                                                                                                      |
+| `--rs-grid-header-border`       | `header_border`       | `rgb(186,191,199)`       | `rgb(61,68,102)`         | Header bottom border                                                                                                   |
+| `--rs-grid-selection-fill`      | `selection_fill`      | `rgba(31,119,220,0.18)`  | `rgba(122,162,255,0.2)`  | Selection rectangle fill                                                                                               |
+| `--rs-grid-selection-border`    | `selection_border`    | `rgba(31,119,220,0.82)`  | `rgba(122,162,255,0.8)`  | Selection rectangle border                                                                                             |
+| `--rs-grid-scrollbar-track`     | `scrollbar_track`     | `rgb(241,241,241)`       | `rgb(31,35,53)`          | Scrollbar track background                                                                                             |
+| `--rs-grid-scrollbar-thumb`     | `scrollbar_thumb`     | `rgba(100,100,110,0.63)` | `rgba(169,177,214,0.4)`  | Scrollbar thumb color                                                                                                  |
+| `--rs-grid-row-alt-bg`          | `row_alt_bg`          | `rgb(252,252,253)`       | `rgb(30,32,48)`          | Alternating row background                                                                                             |
+| `--rs-grid-row-hover-bg`        | `row_hover_bg`        | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Row hover overlay                                                                                                      |
+| `--rs-grid-locked-cell-bg`      | `locked_cell_bg`      | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Background overlay for a non-editable cell (see [Per-cell editability](/features/editing.md#per-cell-editability))     |
+| `--rs-grid-locked-cell-text`    | `locked_cell_text`    | `rgba(24,29,31,0.55)`    | `rgba(208,208,208,0.55)` | Text color for a non-editable cell                                                                                     |
+| `--rs-grid-invalid-cell-border` | `invalid_cell_border` | `rgb(239,68,68)`         | `rgb(220,38,38)`         | Border for a cell whose current value fails validation, shown even at rest (see [Validation](/features/validation.md)) |
+| `--rs-grid-search-highlight`    | `search_highlight`    | `rgba(255,213,0,0.31)`   | `rgba(255,213,0,0.31)`   | Search match highlight                                                                                                 |
+| `--rs-grid-search-current`      | `search_current`      | `rgba(255,165,0,0.55)`   | `rgba(255,165,0,0.55)`   | Current search match                                                                                                   |
+| `--rs-grid-skeleton-fg`         | `skeleton_fg`         | `rgba(200,200,200,0.39)` | `rgba(60,65,90,0.39)`    | Skeleton loading bar color                                                                                             |
 
 ## Size & typography variables
 
-| CSS Variable                 | Theme field        | Default | Type | Description                          |
-| ---------------------------- | ------------------ | ------- | ---- | ------------------------------------ |
-| `--rs-grid-font-size`        | `font_size`        | `14px`  | px   | Cell text font size                  |
-| `--rs-grid-header-font-size` | `header_font_size` | `12px`  | px   | Header text font size                |
-| `--rs-grid-header-font-bold` | `header_font_bold` | `true`  | bool | Header bold (`true`/`false`/`1`/`0`) |
-| `--rs-grid-cell-padding`     | `cell_padding`     | `10px`  | px   | Horizontal cell padding              |
-| `--rs-grid-scrollbar-width`  | `scrollbar_width`  | `14px`  | px   | Scrollbar track + thumb width        |
-| `--rs-grid-scrollbar-radius` | `scrollbar_radius` | `4px`   | px   | Scrollbar thumb corner radius        |
+| CSS Variable                          | Theme field                 | Default | Type | Description                              |
+| ------------------------------------- | --------------------------- | ------- | ---- | ---------------------------------------- |
+| `--rs-grid-font-size`                 | `font_size`                 | `14px`  | px   | Cell text font size                      |
+| `--rs-grid-header-font-size`          | `header_font_size`          | `12px`  | px   | Header text font size                    |
+| `--rs-grid-header-font-bold`          | `header_font_bold`          | `true`  | bool | Header bold (`true`/`false`/`1`/`0`)     |
+| `--rs-grid-cell-padding`              | `cell_padding`              | `10px`  | px   | Horizontal cell padding                  |
+| `--rs-grid-scrollbar-width`           | `scrollbar_width`           | `14px`  | px   | Scrollbar track + thumb width            |
+| `--rs-grid-scrollbar-radius`          | `scrollbar_radius`          | `4px`   | px   | Scrollbar thumb corner radius            |
+| `--rs-grid-invalid-cell-border-width` | `invalid_cell_border_width` | `1.5px` | px   | Width of the at-rest invalid-cell border |
 
 ## Example: custom dark theme
 
