@@ -239,6 +239,35 @@ fires purely from the cell's current value.
 Transparent `invalid_cell_border` (alpha `0`) disables the indicator
 entirely, same convention as `locked_cell_bg`.
 
+## Hover tooltip for invalid cells
+
+Hovering an at-rest-invalid cell shows a tooltip — a single DOM element
+reused across every cell (not one per invalid cell, so the cost is the same
+whether one cell or thousands are invalid), positioned automatically over
+the hovered cell. rs-grid renders no visual of its own for it: the class is
+entirely yours, so you can reproduce daisyUI's tooltip directly:
+
+```rust
+canvas.set_validation_tooltip_class(Some(
+    "tooltip tooltip-open tooltip-error".into(),
+));
+```
+
+`tooltip-open` (or an equivalent always-open modifier) is required — this
+element never receives a real `:hover` from the mouse (it sits on top of
+the canvas with `pointer-events: none`), so rs-grid opens/closes it itself
+via its own `display` toggle rather than relying on CSS `:hover`. Without a
+class set, the tooltip element exists but is invisible.
+
+The validation message itself is exposed as the standard `data-tip`
+attribute, which daisyUI (and any CSS using `content: attr(data-tip)`)
+reads directly — you never need to duplicate the message text yourself.
+
+To check a cell's at-rest validity outside of hovering (e.g. for a custom
+indicator), use `canvas.cell_validation_error(row, col_key) ->
+Option<String>` — independent of any active edit session, unlike
+`validation_error()` above.
+
 ## Paste validation
 
 `GridCommand::PasteAt` validates each target cell's incoming value before
