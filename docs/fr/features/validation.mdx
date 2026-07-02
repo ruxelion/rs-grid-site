@@ -26,6 +26,11 @@ StartEdit → l'utilisateur saisit → ValidateEdit (à chaque frappe, live) →
 La validation est appliquée à l'intérieur de `GridState::apply`, pas
 seulement au niveau de l'interface — elle s'applique donc à tout
 consommateur (tests natifs, rendu canvas, tout futur renderer personnalisé).
+Elle est aussi vérifiée en dehors d'une session d'édition : coller ignore
+les cellules cibles invalides (voir *Validation au collage* ci-dessous), et
+le rendu canvas signale toute cellule dont la valeur actuelle échoue la
+validation même si elle n'a jamais été éditée (voir *Indicateur au repos*
+ci-dessous).
 
 ## Ajouter des règles
 
@@ -231,6 +236,31 @@ if let Some((row, col_key, message)) = canvas.validation_error() {
 Retourne `None` si `col_key` n'existe pas. C'est de la géométrie pure — ça
 ne vérifie pas si la cellule est actuellement visible dans le viewport.
 
+## Indicateur au repos
+
+Une cellule peut être invalide sans jamais avoir été éditée — par exemple
+chargée ainsi depuis la source de données. Le rendu canvas vérifie la
+valeur actuelle de chaque cellule visible via `ColumnDef::validate_value`
+et, en cas d'échec, dessine une bordure thémée (`Theme::invalid_cell_border`
+/ `--rs-grid-invalid-cell-border`) autour d'elle — aucun clic ni session
+d'édition requis. C'est indépendant du style invalide de l'éditeur en ligne
+décrit plus haut (et ça ne l'attend pas) ; ça se déclenche uniquement à
+partir de la valeur actuelle de la cellule.
+
+Un `invalid_cell_border` transparent (alpha `0`) désactive entièrement
+l'indicateur, même convention que `locked_cell_bg`.
+
+## Validation au collage
+
+`GridCommand::PasteAt` valide chaque valeur entrante avant de l'écrire dans
+la cellule cible — une cellule dont la valeur collée échoue la validation
+est silencieusement ignorée (l'écriture n'a pas lieu), tandis que le reste
+du bloc collé s'applique normalement. Ça reflète le comportement d'Excel et
+AG Grid sur le même cas : aucun des deux ne bloque un collage entièrement,
+et quand un rejet existe il est toujours par cellule, jamais tout-ou-rien.
+`CutSelection` n'est pas affecté, puisqu'il n'écrit jamais qu'une chaîne
+vide.
+
 ## Repli tooltip natif `title`
 
 Par défaut, l'`<input>` d'édition en ligne reçoit un attribut `title` natif
@@ -244,9 +274,11 @@ canvas.set_native_validation_tooltip(false);
 
 ## Comportement
 
-- La validation s'exécute **uniquement sur les éditions utilisateur**
-  (`CommitEdit` / `ValidateEdit`). Les écritures programmatiques via
-  `GridModel::set_cell` la contournent.
+- La validation s'exécute sur les éditions utilisateur (`CommitEdit` /
+  `ValidateEdit`) et sur `PasteAt` (voir *Validation au collage*
+  ci-dessus). Les écritures programmatiques directes via
+  `GridModel::set_cell` la contournent toujours — c'est l'API de plus bas
+  niveau et elle n'a volontairement aucune couche de validation propre.
 - Les éditeurs `Select` sont validés aussi — la valeur de l'option
   sélectionnée est vérifiée comme n'importe quelle autre.
 - Les règles et le validateur historique sont **synchrones**. Pour une

@@ -25,7 +25,10 @@ StartEdit → user types → ValidateEdit (every keystroke, live) → CommitEdit
 
 Validation is enforced inside `GridState::apply`, not just at the UI layer —
 so it holds for every consumer (native tests, the canvas renderer, any
-future custom renderer).
+future custom renderer). It's also checked outside an edit session: pasting
+skips invalid target cells (see *Paste validation* below), and the canvas
+renderer flags any cell whose current value fails validation even when it's
+never been edited (see *At-rest indicator* below).
 
 ## Adding rules
 
@@ -230,6 +233,29 @@ if let Some((row, col_key, message)) = canvas.validation_error() {
 Returns `None` if `col_key` doesn't exist. It's geometry only — it doesn't
 check whether the cell is currently scrolled into view.
 
+## At-rest indicator
+
+A cell can be invalid without ever being edited — e.g. loaded that way from
+the data source. The canvas renderer checks every visible cell's current
+value against `ColumnDef::validate_value` and, on failure, draws a themed
+border (`Theme::invalid_cell_border` / `--rs-grid-invalid-cell-border`)
+around it — no click or edit session required. This is separate from (and
+doesn't wait for) the inline editor's invalid style described above; it
+fires purely from the cell's current value.
+
+Transparent `invalid_cell_border` (alpha `0`) disables the indicator
+entirely, same convention as `locked_cell_bg`.
+
+## Paste validation
+
+`GridCommand::PasteAt` validates each target cell's incoming value before
+writing it — a cell whose pasted value fails validation is silently skipped
+(the write doesn't happen), while the rest of the pasted block still
+applies. This mirrors how Excel and AG Grid handle the same case: neither
+blocks a paste outright, and when a rejection exists it's always per-cell,
+never all-or-nothing. `CutSelection` is unaffected, since it only ever
+writes an empty string.
+
 ## Native `title` tooltip fallback
 
 By default, the inline edit `<input>` gets a native `title` attribute
@@ -243,8 +269,10 @@ canvas.set_native_validation_tooltip(false);
 
 ## Behaviour
 
-- Validation runs **only on user edits** (`CommitEdit` / `ValidateEdit`).
-  Programmatic writes via `GridModel::set_cell` bypass it.
+- Validation runs on user edits (`CommitEdit` / `ValidateEdit`) and on
+  `PasteAt` (see *Paste validation* above). Direct programmatic writes via
+  `GridModel::set_cell` still bypass it — that's the lowest-level API and
+  intentionally has no validation layer of its own.
 - `Select` editors are validated too — the selected option's value is
   checked like any other.
 - Rules and the legacy validator are **synchronous**. For async validation
