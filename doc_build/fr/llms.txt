@@ -2,10 +2,6 @@
 
 > High-performance Rust/WASM data grid engine for the web
 
-## Docs
-
-- [Premiers pas](/fr/getting-started.md): Installez rs-grid et affichez votre premier data grid.
-
 ## Others
 
 - [API ColumnDef](/fr/api/column-def.md): Définition de colonne, formats de cellule et éditeurs de cellule.
@@ -48,6 +44,7 @@
 - [Tri](/fr/features/sorting.md): Tri par colonne avec les états croissant, décroissant et aucun.
 - [Annuler et Retablir](/fr/features/undo-redo.md): Actions reversibles avec une pile d'historique a capacite fixe.
 - [Validation](/fr/features/validation.md): Règles de validation déclaratives par colonne, politique bloquer-ou-annuler, et retour live à chaque frappe pour les éditions.
+- [Premiers pas](/fr/getting-started.md): Installez rs-grid et affichez votre premier data grid.
 - [Guide : Thème personnalisé](/fr/howto/custom-theme.md): Appliquer un thème visuel personnalisé à rs-grid via les variables CSS ou la struct Theme.
 - [Guide : Sélection programmatique](/fr/howto/programmatic-selection.md): Sélectionner des cellules, lignes et plages via GridCommand, et lire l'état de sélection.
 - [Guide : Pagination côté serveur](/fr/howto/server-pagination.md): Charger de grands jeux de données depuis un serveur avec PageCacheDataSource et FetchConfig.
