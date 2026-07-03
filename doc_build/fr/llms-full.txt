@@ -1,4 +1,178 @@
 ---
+url: /fr/getting-started.md
+---
+
+# Premiers pas
+
+## Prerequis
+
+- Toolchain Rust (stable, edition 2021)
+- [Trunk](https://trunk-rs.github.io/trunk/) pour compiler et servir les applications WASM
+- La cible `wasm32-unknown-unknown`
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo install trunk
+```
+
+## Demarrage rapide
+
+
+**[object Object]**
+
+Ajoutez `rs-grid-leptos` a votre `Cargo.toml` :
+```toml title="Cargo.toml"
+[dependencies]
+rs-grid-leptos = { path = "../rs-grid-leptos" }
+```
+Importez le composant et montez-le dans une vue Leptos :
+```rust title="src/main.rs"
+use leptos::*;
+use rs_grid_leptos::GridCanvas;
+
+#[component]
+pub fn App() -> impl IntoView {
+    view! {
+        <main style="width: 100vw; height: 100vh;">
+            <GridCanvas
+                rows=1_000_000_u64
+                cols=50_usize
+            />
+        </main>
+    }
+}
+
+fn main() {
+    leptos::mount_to_body(App);
+}
+```
+Lancez l'exemple :
+```bash
+cd examples/basic-leptos
+trunk serve
+```
+
+
+**[object Object]**
+
+Compilez le package WASM :
+```bash
+cd crates/rs-grid-web
+wasm-pack build --target web
+```
+Utilisez-le dans votre HTML :
+```html title="index.html"
+<canvas id="grid" style="width: 100vw; height: 100vh;"></canvas>
+<script type="module">
+  import init, { JsGrid } from './pkg/rs_grid_web.js';
+  await init();
+  const canvas = document.getElementById('grid');
+  const grid = new JsGrid(canvas, 1_000_000, 50);
+</script>
+```
+
+
+**[object Object]**
+
+Ajoutez `rs-grid-dioxus` a votre `Cargo.toml` :
+```toml title="Cargo.toml"
+[dependencies]
+rs-grid-dioxus = { path = "../rs-grid-dioxus" }
+```
+Importez le composant et montez-le dans une application Dioxus :
+```rust title="src/main.rs"
+use dioxus::prelude::*;
+use rs_grid_dioxus::{GridCanvas, ModelSlot};
+use rs_grid_core::model::GridModel;
+
+fn App() -> Element {
+    let model = use_hook(|| {
+        ModelSlot::new(GridModel::new(1_000_000, 50))
+    });
+    rsx! {
+        main { style: "width:100vw;height:100vh;",
+            GridCanvas { model: model.clone() }
+        }
+    }
+}
+
+fn main() {
+    dioxus::launch(App);
+}
+```
+Lancez l'exemple :
+```bash
+cd examples/basic-dioxus
+trunk serve
+```
+
+
+**[object Object]**
+
+Ajoutez `rs-grid-yew` a votre `Cargo.toml` :
+```toml title="Cargo.toml"
+[dependencies]
+rs-grid-yew = { path = "../rs-grid-yew" }
+```
+Importez le composant et montez-le dans une application Yew :
+```rust title="src/main.rs"
+use yew::prelude::*;
+use rs_grid_yew::{GridCanvas, wrap_model};
+use rs_grid_core::model::GridModel;
+
+#[function_component]
+fn App() -> Html {
+    let model = wrap_model(GridModel::new(1_000_000, 50));
+    html! {
+        <main style="width:100vw;height:100vh;">
+            <GridCanvas model={model} />
+        </main>
+    }
+}
+
+fn main() {
+    yew::Renderer::<App>::new().render();
+}
+```
+Lancez l'exemple :
+```bash
+cd examples/basic-yew
+trunk serve
+```
+
+
+Rendez-vous sur `http://localhost:8080`. Vous devriez voir un grid
+affichant 1 million de lignes a 60 fps.
+
+## Compiler pour la production
+
+```bash
+cd examples/basic-leptos
+trunk build --release
+```
+
+La sortie est generee dans `dist/`. Servez-la avec n'importe quel serveur de
+fichiers statiques ou utilisez l'[image Docker](/fr/deployment/docker.md)
+fournie.
+
+## Commandes du workspace
+
+| Commande                                  | Description                                        |
+| ----------------------------------------- | -------------------------------------------------- |
+| `cargo check --workspace`                 | Verification rapide des types pour tous les crates |
+| `cargo test --workspace`                  | Lancer tous les tests unitaires                    |
+| `cargo fmt --all`                         | Formater l'ensemble du workspace                   |
+| `cargo clippy --workspace -- -D warnings` | Lint avec warnings traites comme erreurs           |
+| `trunk serve` (dans le dossier exemple)   | Serveur de dev avec hot reload                     |
+
+:::tip
+`rs-grid-core` n'a aucune dependance WASM — ses tests unitaires s'executent
+avec un simple `cargo test`, sans navigateur.
+:::
+
+
+
+---
 url: /fr/api/column-def.md
 ---
 
@@ -3806,15 +3980,15 @@ visibles dans le viewport à un instant donné, indépendamment du nombre total 
 
 Time per frame (µs)60fps budget: 16,600 µs
 
-20 cols × 10k rows28.2 µs
+20 cols × 10k rows39.0 µs
 
-50 cols × 1M rows36.5 µs
+50 cols × 1M rows49.5 µs
 
-100 cols × 10M rows46.0 µs
+100 cols × 10M rows62.0 µs
 
-1 000 cols × 1B rows45.8 µs
+1 000 cols × 1B rows63.9 µs
 
-50 cols × 1 quadrillion37.4 µs
+50 cols × 1 quadrillion52.3 µs
 
 All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
 
@@ -3831,17 +4005,17 @@ Varying row count (1 000 cols fixed)
 
 | Configuration | Hit-test time |
 | --- | --- |
-| 1 000 rows, 1 000 cols | 39.0 ns |
-| 1 billion rows, 1 000 cols | 58.0 ns |
-| 1 quadrillion rows, 1 000 cols | 37.0 ns |
+| 1 000 rows, 1 000 cols | 68.2 ns |
+| 1 billion rows, 1 000 cols | 78.0 ns |
+| 1 quadrillion rows, 1 000 cols | 63.7 ns |
 
 Varying column count (O(log n) in action)
 
 | Columns | Hit-test time |
 | --- | --- |
-| 10 cols | 14.8 ns |
-| 100 cols | 19.1 ns |
-| 1 000 cols | 25.4 ns |
+| 10 cols | 21.6 ns |
+| 100 cols | 28.3 ns |
+| 1 000 cols | 35.8 ns |
 
 
 L'augmentation de 1,7× de 10 à 1 000 colonnes (10 → 18 ns) reflète la recherche binaire sur
@@ -3857,26 +4031,26 @@ Varying row count — FnDataSource (20 cols fixed)
 
 | Rows | Init time |
 | --- | --- |
-| 1 000 | 2.3 µs |
-| 100 000 | 2.4 µs |
-| 1 000 000 | 2.4 µs |
-| 100 000 000 | 2.4 µs |
-| 1 000 000 000 | 2.4 µs |
-| 1 000 000 000 000 000 | 2.4 µs |
+| 1 000 | 2.9 µs |
+| 100 000 | 3.1 µs |
+| 1 000 000 | 3.2 µs |
+| 100 000 000 | 3.1 µs |
+| 1 000 000 000 | 3.1 µs |
+| 1 000 000 000 000 000 | 3.0 µs |
 
 Flat regardless of row count — O(n_cols), not O(n_rows).
 
 Varying column count (1M rows fixed)
 
-5 cols0.6 µs
+5 cols0.7 µs
 
-20 cols2.3 µs
+20 cols3.1 µs
 
-50 cols6.3 µs
+50 cols8.1 µs
 
-100 cols13.0 µs
+100 cols16.8 µs
 
-1 000 cols129.3 µs
+1 000 cols164.8 µs
 
 Initialiser un grid avec **1 quadrillion de lignes virtuelles** prend les mêmes \~5 µs qu'un
 grid de 1 000 lignes. Si toutes les données sont en mémoire (`VecDataSource`), l'initialisation
@@ -3891,15 +4065,15 @@ cache de clés évite de ré-extraire les valeurs lors d'un toggle de direction 
 
 100 000 rows — sort time (ms)
 
-Numeric sort (cold)13.8 ms
+Numeric sort (cold)17.1 ms
 
 Radix sort, first call — key extraction + sort
 
-Numeric sort (cached)9.4 ms
+Numeric sort (cached)12.3 ms
 
 Radix sort, direction toggle — keys reused from cache
 
-String sort (cold)18.0 ms
+String sort (cold)20.4 ms
 
 Lexicographic comparison sort
 
@@ -3925,7 +4099,7 @@ Pour les grands datasets (> 100k lignes), préférez `FnDataSource` avec paginat
 Voir [FnDataSource](/fr/data/fn-datasource.md) et [PageCache](/fr/data/page-cache.md).
 
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `728e6a4` · July 3, 2026. Updated automatically on every push to `main` via CI.
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `e26bcf1` · July 3, 2026. Updated automatically on every push to `main` via CI.
 
 
 
@@ -4760,180 +4934,6 @@ canvas.set_native_validation_tooltip(false);
 
 
 ---
-url: /fr/getting-started.md
----
-
-# Premiers pas
-
-## Prerequis
-
-- Toolchain Rust (stable, edition 2021)
-- [Trunk](https://trunk-rs.github.io/trunk/) pour compiler et servir les applications WASM
-- La cible `wasm32-unknown-unknown`
-
-```bash
-rustup target add wasm32-unknown-unknown
-cargo install trunk
-```
-
-## Demarrage rapide
-
-
-**[object Object]**
-
-Ajoutez `rs-grid-leptos` a votre `Cargo.toml` :
-```toml title="Cargo.toml"
-[dependencies]
-rs-grid-leptos = { path = "../rs-grid-leptos" }
-```
-Importez le composant et montez-le dans une vue Leptos :
-```rust title="src/main.rs"
-use leptos::*;
-use rs_grid_leptos::GridCanvas;
-
-#[component]
-pub fn App() -> impl IntoView {
-    view! {
-        <main style="width: 100vw; height: 100vh;">
-            <GridCanvas
-                rows=1_000_000_u64
-                cols=50_usize
-            />
-        </main>
-    }
-}
-
-fn main() {
-    leptos::mount_to_body(App);
-}
-```
-Lancez l'exemple :
-```bash
-cd examples/basic-leptos
-trunk serve
-```
-
-
-**[object Object]**
-
-Compilez le package WASM :
-```bash
-cd crates/rs-grid-web
-wasm-pack build --target web
-```
-Utilisez-le dans votre HTML :
-```html title="index.html"
-<canvas id="grid" style="width: 100vw; height: 100vh;"></canvas>
-<script type="module">
-  import init, { JsGrid } from './pkg/rs_grid_web.js';
-  await init();
-  const canvas = document.getElementById('grid');
-  const grid = new JsGrid(canvas, 1_000_000, 50);
-</script>
-```
-
-
-**[object Object]**
-
-Ajoutez `rs-grid-dioxus` a votre `Cargo.toml` :
-```toml title="Cargo.toml"
-[dependencies]
-rs-grid-dioxus = { path = "../rs-grid-dioxus" }
-```
-Importez le composant et montez-le dans une application Dioxus :
-```rust title="src/main.rs"
-use dioxus::prelude::*;
-use rs_grid_dioxus::{GridCanvas, ModelSlot};
-use rs_grid_core::model::GridModel;
-
-fn App() -> Element {
-    let model = use_hook(|| {
-        ModelSlot::new(GridModel::new(1_000_000, 50))
-    });
-    rsx! {
-        main { style: "width:100vw;height:100vh;",
-            GridCanvas { model: model.clone() }
-        }
-    }
-}
-
-fn main() {
-    dioxus::launch(App);
-}
-```
-Lancez l'exemple :
-```bash
-cd examples/basic-dioxus
-trunk serve
-```
-
-
-**[object Object]**
-
-Ajoutez `rs-grid-yew` a votre `Cargo.toml` :
-```toml title="Cargo.toml"
-[dependencies]
-rs-grid-yew = { path = "../rs-grid-yew" }
-```
-Importez le composant et montez-le dans une application Yew :
-```rust title="src/main.rs"
-use yew::prelude::*;
-use rs_grid_yew::{GridCanvas, wrap_model};
-use rs_grid_core::model::GridModel;
-
-#[function_component]
-fn App() -> Html {
-    let model = wrap_model(GridModel::new(1_000_000, 50));
-    html! {
-        <main style="width:100vw;height:100vh;">
-            <GridCanvas model={model} />
-        </main>
-    }
-}
-
-fn main() {
-    yew::Renderer::<App>::new().render();
-}
-```
-Lancez l'exemple :
-```bash
-cd examples/basic-yew
-trunk serve
-```
-
-
-Rendez-vous sur `http://localhost:8080`. Vous devriez voir un grid
-affichant 1 million de lignes a 60 fps.
-
-## Compiler pour la production
-
-```bash
-cd examples/basic-leptos
-trunk build --release
-```
-
-La sortie est generee dans `dist/`. Servez-la avec n'importe quel serveur de
-fichiers statiques ou utilisez l'[image Docker](/fr/deployment/docker.md)
-fournie.
-
-## Commandes du workspace
-
-| Commande                                  | Description                                        |
-| ----------------------------------------- | -------------------------------------------------- |
-| `cargo check --workspace`                 | Verification rapide des types pour tous les crates |
-| `cargo test --workspace`                  | Lancer tous les tests unitaires                    |
-| `cargo fmt --all`                         | Formater l'ensemble du workspace                   |
-| `cargo clippy --workspace -- -D warnings` | Lint avec warnings traites comme erreurs           |
-| `trunk serve` (dans le dossier exemple)   | Serveur de dev avec hot reload                     |
-
-:::tip
-`rs-grid-core` n'a aucune dependance WASM — ses tests unitaires s'executent
-avec un simple `cargo test`, sans navigateur.
-:::
-
-
-
----
 url: /fr/howto/custom-theme.md
 ---
 
@@ -5391,9 +5391,9 @@ Un data grid qui ne ralentit jamais. Parcourez des millions de lignes aussi flui
 
 ∞lignes, zéro latence
 
-<37 µspar frame à 60fps
+<50 µspar frame à 60fps
 
-37 nshit-test (1 quadrillion de lignes)
+63.7 nshit-test (1 quadrillion de lignes)
 
 100% Rustcompilé en WASM
 
