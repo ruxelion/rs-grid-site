@@ -140,6 +140,43 @@ variables `--rs-grid-locked-cell-bg` / `--rs-grid-locked-cell-text` — see
 See [EditablePredicate](/api/column-def.md#editablepredicate) for the full
 type reference.
 
+## Per-cell decoration
+
+Sometimes a business rule spans two columns and neither one is invalid _on
+its own_ — e.g. a row is inconsistent if one of a paired file/label column
+is filled in and the other is blank. Neither column can express this with
+[Validation](/features/validation.md) alone, since each accepts a blank value
+in isolation. Attach a dynamic decorator with `.decorated_when(...)` to
+flag the cell persistently, at rest — not just while it's being edited:
+
+```rust
+use rs_grid_core::column::{CellDecoration, ColumnDef};
+
+let doc1_file = ColumnDef::new("doc1_file", "Doc 1 file", 160.0)
+    .decorated_when(|row, model| {
+        let file = model.get_cell(row, "doc1_file").unwrap_or_default();
+        let label = model.get_cell(row, "doc1_label").unwrap_or_default();
+        (file.is_empty() != label.is_empty()).then(|| {
+            CellDecoration::default().with_border_color([239, 68, 68, 255])
+        })
+    });
+```
+
+Like `.editable_when(...)`, the closure receives the row index and the
+full [`GridModel`](/api/grid-model.md), so it can read any other column's
+value for that row. Unlike editability or validation, decoration never
+blocks anything — it's purely cosmetic, and there's no static gate to
+short-circuit it.
+
+The border color and background tint are RGBA values you supply directly
+in `CellDecoration` — they aren't read from the theme. Only the border's
+stroke width is themed (`--rs-grid-decoration-border-width`), since it's
+uniform across every decorated cell regardless of which color you pick.
+
+See [CellDecoration](/api/column-def.md#celldecoration) and
+[CellDecorator](/api/column-def.md#celldecorator) for the full type
+reference.
+
 ## Validation
 
 `CommitEdit` (and the live `ValidateEdit` command fired on every keystroke)

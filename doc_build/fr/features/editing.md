@@ -145,6 +145,46 @@ voir [Theming](/fr/theming/css-variables.md)).
 Voir [EditablePredicate](/fr/api/column-def.md#editablepredicate) pour la
 référence complète du type.
 
+## Décoration par cellule
+
+Parfois une règle métier concerne deux colonnes et aucune des deux n'est
+invalide _en isolation_ — par ex. une ligne est incohérente si l'une d'une
+paire fichier/libellé est remplie et l'autre vide. Aucune des deux colonnes
+ne peut exprimer ça avec la [Validation](/fr/features/validation.md) seule,
+puisque chacune accepte une valeur vide isolément. Attachez un décorateur
+dynamique avec `.decorated_when(...)` pour signaler la cellule de façon
+persistante, au repos — pas seulement pendant son édition :
+
+```rust
+use rs_grid_core::column::{CellDecoration, ColumnDef};
+
+let doc1_file = ColumnDef::new("doc1_file", "Doc 1 file", 160.0)
+    .decorated_when(|row, model| {
+        let file = model.get_cell(row, "doc1_file").unwrap_or_default();
+        let label = model.get_cell(row, "doc1_label").unwrap_or_default();
+        (file.is_empty() != label.is_empty()).then(|| {
+            CellDecoration::default().with_border_color([239, 68, 68, 255])
+        })
+    });
+```
+
+Comme `.editable_when(...)`, la closure reçoit l'index de ligne et le
+[`GridModel`](/fr/api/grid-model.md) complet, ce qui lui permet de lire la
+valeur de n'importe quelle autre colonne pour cette ligne. Contrairement à
+l'éditabilité ou à la validation, la décoration ne bloque jamais rien —
+elle est purement cosmétique, et il n'y a pas de garde statique pour la
+court-circuiter.
+
+La couleur de bordure et la teinte de fond sont des valeurs RGBA que vous
+fournissez directement dans `CellDecoration` — elles ne sont pas lues
+depuis le thème. Seule l'épaisseur de la bordure est thémée
+(`--rs-grid-decoration-border-width`), car elle est uniforme pour toutes
+les cellules décorées, quelle que soit la couleur choisie.
+
+Voir [CellDecoration](/fr/api/column-def.md#celldecoration) et
+[CellDecorator](/fr/api/column-def.md#celldecorator) pour la référence
+complète du type.
+
 ## Validation
 
 `CommitEdit` (ainsi que la commande live `ValidateEdit` déclenchée à chaque

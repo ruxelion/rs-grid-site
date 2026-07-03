@@ -180,6 +180,88 @@ See [Per-cell editability](/features/editing.md#per-cell-editability) for the
 full feature guide, including the `not-allowed` cursor and themed
 locked-cell styling.
 
+## CellDecoration
+
+```rust
+#[non_exhaustive]
+pub struct CellDecoration {
+    pub border_color: Option<[u8; 4]>,
+    pub background_tint: Option<[u8; 4]>,
+    pub message: Option<String>,
+}
+```
+
+A persistent, at-rest visual annotation for a single cell — a border color
+and/or background tint that stays visible whenever the cell is on screen,
+not just while it's being edited. Purely cosmetic: unlike validation, it
+never blocks a value from being committed, only changes how the cell is
+painted.
+
+`border_color`/`background_tint` are RGBA (`[r, g, b, a]`), supplied
+directly by your closure — not read from the [theme](/theming/css-variables.md).
+Only the border's stroke width is themed
+(`--rs-grid-decoration-border-width`, default `1.5px`), since it's uniform
+across every decorated cell regardless of which color you pick.
+
+`message` is reserved for a future native hover tooltip — it is not
+rendered anywhere yet.
+
+`CellDecoration` is `#[non_exhaustive]`, so build one from
+`CellDecoration::default()` chained with the builders below rather than
+struct-literal syntax:
+
+| Method                        | Sets              | Returns |
+| ----------------------------- | ----------------- | ------- |
+| `.with_border_color(rgba)`    | `border_color`    | `Self`  |
+| `.with_background_tint(rgba)` | `background_tint` | `Self`  |
+| `.with_message(msg)`          | `message`         | `Self`  |
+
+## CellDecorator
+
+```rust
+pub struct CellDecorator(pub Rc<dyn Fn(u64, &GridModel) -> Option<CellDecoration>>);
+```
+
+A dynamic per-cell decoration callback, attached to `ColumnDef.decorator`.
+Mirrors [`EditablePredicate`](#editablepredicate) exactly in shape:
+receives the row index and the full [`GridModel`](/api/grid-model.md), so it
+can implement cross-column logic — e.g. flag a cell when a paired column
+is inconsistent.
+
+```rust
+CellDecorator::new(|row, model| {
+    let file = model.get_cell(row, "doc1_file").unwrap_or_default();
+    let label = model.get_cell(row, "doc1_label").unwrap_or_default();
+    (file.is_empty() != label.is_empty()).then(|| {
+        CellDecoration::default().with_border_color([239, 68, 68, 255])
+    })
+})
+```
+
+| Method                                  | Description                                       |
+| --------------------------------------- | ------------------------------------------------- |
+| `new(f)`                                | Wrap a closure as a decorator                     |
+| `decorate(row: u64, model: &GridModel)` | Run the closure; returns `Option<CellDecoration>` |
+
+### Builder sugar on `ColumnDef`
+
+| Method               | Sets        | Returns |
+| -------------------- | ----------- | ------- |
+| `.decorated_when(f)` | `decorator` | `Self`  |
+
+### `ColumnDef::cell_decoration`
+
+```rust
+pub fn cell_decoration(&self, row: u64, model: &GridModel) -> Option<CellDecoration>
+```
+
+Resolves this cell's decoration, if any. Unlike `is_cell_editable`, there
+is no static gate — a decoration is purely cosmetic and not affected by
+`ColumnDef::editable`/`GridModel::editable`.
+
+See [Per-cell decoration](/features/editing.md#per-cell-decoration) for the
+full feature guide.
+
 ## CellEditor
 
 ```rust

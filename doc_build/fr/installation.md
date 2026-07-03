@@ -20,7 +20,7 @@
 
 3. **Trunk (utilisateurs Leptos)**
 
-   Installez [Trunk](https://trunkrs.dev/) pour compiler et servir les applications Leptos :
+   Installez [Trunk](https://trunk-rs.github.io/trunk/) pour compiler et servir les applications Leptos :
 
    ```bash
    cargo install trunk

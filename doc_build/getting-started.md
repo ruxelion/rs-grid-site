@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Rust toolchain (stable, 2021 edition)
-- [Trunk](https://trunkrs.dev) for building and serving WASM apps
+- [Trunk](https://trunk-rs.github.io/trunk/) for building and serving WASM apps
 - The `wasm32-unknown-unknown` target
 
 ```bash
