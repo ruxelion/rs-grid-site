@@ -9,9 +9,9 @@ A data grid that never slows down. Scroll through millions of rows as smoothly a
 
 ∞rows, zero lag
 
-<45 µsper frame at 60fps
+<47 µsper frame at 60fps
 
-35.4 nshit-test (1 quadrillion rows)
+47.5 nshit-test (1 quadrillion rows)
 
 Pure Rustcompiled to WASM
 
