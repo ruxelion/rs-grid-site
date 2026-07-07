@@ -4,7 +4,7 @@
 
 ```rust
 #[non_exhaustive]
-pub enum GridCommand { /* 44 variants */ }
+pub enum GridCommand { /* 47 variants */ }
 ```
 
 All mutations to `GridState` go through `state.apply(GridCommand)`.
@@ -23,6 +23,21 @@ ExtendRowSelection(u64)
 SelectCol(usize)
 ExtendColSelection(usize)
 ```
+
+### Row checkboxes
+
+```rust
+ToggleRowChecked(u64)          // logical row index — click on the checkbox column
+ToggleAllFilteredChecked       // toggles all rows passing the active filter (or all rows, if unfiltered)
+SetShowCheckboxColumn(bool)    // show/hide the row-selection checkbox column
+```
+
+:::note
+Checked state (`GridState.checked_rows`) is tracked separately from
+`SelectionState`, keyed by **physical** row id so it survives sort/filter
+changes. See [Selection](/concepts/selection.md#row-selection-checkbox-column)
+for the full model.
+:::
 
 ### Scrolling & Viewport
 

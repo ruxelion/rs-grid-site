@@ -601,7 +601,7 @@ url: /api/grid-command.md
 
 ```rust
 #[non_exhaustive]
-pub enum GridCommand { /* 44 variants */ }
+pub enum GridCommand { /* 47 variants */ }
 ```
 
 All mutations to `GridState` go through `state.apply(GridCommand)`.
@@ -620,6 +620,21 @@ ExtendRowSelection(u64)
 SelectCol(usize)
 ExtendColSelection(usize)
 ```
+
+### Row checkboxes
+
+```rust
+ToggleRowChecked(u64)          // logical row index — click on the checkbox column
+ToggleAllFilteredChecked       // toggles all rows passing the active filter (or all rows, if unfiltered)
+SetShowCheckboxColumn(bool)    // show/hide the row-selection checkbox column
+```
+
+:::note
+Checked state (`GridState.checked_rows`) is tracked separately from
+`SelectionState`, keyed by **physical** row id so it survives sort/filter
+changes. See [Selection](/concepts/selection.md#row-selection-checkbox-column)
+for the full model.
+:::
 
 ### Scrolling & Viewport
 
@@ -1662,6 +1677,57 @@ with the selection highlight color for every selected cell in the viewport.
 Even with a full-grid selection (all rows x all columns), only the primitives
 for visible cells are built. The scene size is bounded by the viewport, not
 the selection size.
+:::
+
+## Row-selection checkbox column
+
+Separate from the anchor/focus selection above, rs-grid supports an opt-in
+row-selection checkbox column, with a per-row checkbox and a tri-state
+header checkbox ("select all"). Unlike the row-number gutter, it is not a
+fixed/pinned band — it's the first column of the scrollable region, so it
+scrolls away with the data on horizontal scroll, just like a regular
+column.
+
+```rust
+let model = GridModelBuilder::new(columns, data)
+    .row_selection_checkboxes(true)
+    .build();
+```
+
+Checked state is tracked separately from `SelectionState`, by **physical**
+row id (not display position), so it survives sorting and filtering:
+
+```rust
+// Toggle a single row (by logical/display index)
+grid_state.apply(GridCommand::ToggleRowChecked(3));
+
+// Toggle the header checkbox — checks or unchecks every row
+// currently passing the active filter (or every row, if unfiltered)
+grid_state.apply(GridCommand::ToggleAllFilteredChecked);
+
+// Show/hide the column at runtime
+grid_state.apply(GridCommand::SetShowCheckboxColumn(true));
+```
+
+`CheckboxTriState` (`Checked` / `Unchecked` / `Indeterminate`) describes the
+header checkbox's state — `Indeterminate` when some but not all rows in
+scope are checked. Clicking an indeterminate header checks every row in
+scope rather than unchecking them.
+
+On `GridCanvas` (the browser integration):
+
+| Method                            | Description                              |
+| --------------------------------- | ---------------------------------------- |
+| `checked_row_indices()`           | Physical row ids currently checked       |
+| `checkbox_header_state()`         | Current `CheckboxTriState` of the header |
+| `set_show_checkbox_column(bool)`  | Show/hide the column                     |
+| `set_on_checked_rows_changed(cb)` | Callback fired after any checkbox toggle |
+
+:::tip
+"Select all" only affects rows passing the active filter, not the entire
+dataset — checking rows hidden by a filter would be surprising for a
+subsequent bulk action (matches the convention used by most data-grid
+libraries).
 :::
 
 
@@ -3918,15 +3984,15 @@ viewport at any moment, regardless of how many rows exist in the datasource.
 
 Time per frame (µs)60fps budget: 16,600 µs
 
-20 cols × 10k rows36.2 µs
+20 cols × 10k rows30.6 µs
 
-50 cols × 1M rows48.1 µs
+50 cols × 1M rows38.6 µs
 
-100 cols × 10M rows59.0 µs
+100 cols × 10M rows47.7 µs
 
-1 000 cols × 1B rows60.5 µs
+1 000 cols × 1B rows48.6 µs
 
-50 cols × 1 quadrillion49.9 µs
+50 cols × 1 quadrillion39.5 µs
 
 All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
 
@@ -3942,17 +4008,17 @@ Varying row count (1 000 cols fixed)
 
 | Configuration | Hit-test time |
 | --- | --- |
-| 1 000 rows, 1 000 cols | 38.2 ns |
-| 1 billion rows, 1 000 cols | 53.0 ns |
-| 1 quadrillion rows, 1 000 cols | 35.4 ns |
+| 1 000 rows, 1 000 cols | 38.7 ns |
+| 1 billion rows, 1 000 cols | 57.1 ns |
+| 1 quadrillion rows, 1 000 cols | 37.0 ns |
 
 Varying column count (O(log n) in action)
 
 | Columns | Hit-test time |
 | --- | --- |
-| 10 cols | 13.8 ns |
-| 100 cols | 18.6 ns |
-| 1 000 cols | 23.0 ns |
+| 10 cols | 14.6 ns |
+| 100 cols | 19.7 ns |
+| 1 000 cols | 25.5 ns |
 
 
 The 1.7× increase from 10 → 1 000 columns (10 → 18 ns) reflects the binary search over column
@@ -3968,26 +4034,26 @@ Varying row count — FnDataSource (20 cols fixed)
 
 | Rows | Init time |
 | --- | --- |
-| 1 000 | 2.7 µs |
-| 100 000 | 3.0 µs |
-| 1 000 000 | 3.0 µs |
-| 100 000 000 | 3.0 µs |
-| 1 000 000 000 | 3.0 µs |
-| 1 000 000 000 000 000 | 3.0 µs |
+| 1 000 | 2.3 µs |
+| 100 000 | 2.4 µs |
+| 1 000 000 | 2.4 µs |
+| 100 000 000 | 2.3 µs |
+| 1 000 000 000 | 2.4 µs |
+| 1 000 000 000 000 000 | 2.3 µs |
 
 Flat regardless of row count — O(n_cols), not O(n_rows).
 
 Varying column count (1M rows fixed)
 
-5 cols0.7 µs
+5 cols0.6 µs
 
-20 cols3.1 µs
+20 cols2.3 µs
 
-50 cols8.0 µs
+50 cols6.3 µs
 
-100 cols16.5 µs
+100 cols12.9 µs
 
-1 000 cols162.2 µs
+1 000 cols129.0 µs
 
 Initializing a grid with **1 quadrillion virtual rows** takes the same \~5 µs as a grid with
 1 000 rows. If you need all data in memory (`VecDataSource`), initialization is still dominated
@@ -4002,15 +4068,15 @@ sort direction on the same column.
 
 100 000 rows — sort time (ms)
 
-Numeric sort (cold)21.6 ms
+Numeric sort (cold)13.3 ms
 
 Radix sort, first call — key extraction + sort
 
-Numeric sort (cached)15.7 ms
+Numeric sort (cached)9.3 ms
 
 Radix sort, direction toggle — keys reused from cache
 
-String sort (cold)23.4 ms
+String sort (cold)16.9 ms
 
 Lexicographic comparison sort
 
@@ -4035,7 +4101,7 @@ For large datasets (> 100k rows), prefer `FnDataSource` with server-side paginat
 See [FnDataSource](/data/fn-datasource.md) and [PageCache](/data/page-cache.md) for implementation details.
 
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `2158914` · July 4, 2026. Updated automatically on every push to `main` via CI.
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `ab63463` · July 4, 2026. Updated automatically on every push to `main` via CI.
 
 
 
@@ -5362,9 +5428,9 @@ A data grid that never slows down. Scroll through millions of rows as smoothly a
 
 ∞rows, zero lag
 
-<49 µsper frame at 60fps
+<39 µsper frame at 60fps
 
-35.4 nshit-test (1 quadrillion rows)
+37 nshit-test (1 quadrillion rows)
 
 Pure Rustcompiled to WASM
 

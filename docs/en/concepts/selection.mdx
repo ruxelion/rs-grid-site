@@ -67,3 +67,58 @@ Even with a full-grid selection (all rows x all columns), only the primitives
 for visible cells are built. The scene size is bounded by the viewport, not
 the selection size.
 :::
+
+## Row-selection checkbox column
+
+Separate from the anchor/focus selection above, rs-grid supports an opt-in
+row-selection checkbox column, with a per-row checkbox and a tri-state
+header checkbox ("select all"). Unlike the row-number gutter, it is not a
+fixed/pinned band — it's the first column of the scrollable region, so it
+scrolls away with the data on horizontal scroll, just like a regular
+column.
+
+```rust
+let model = GridModelBuilder::new(columns, data)
+    .row_selection_checkboxes(true)
+    .build();
+```
+
+Checked state is tracked separately from `SelectionState`, by **physical**
+row id (not display position), so it survives sorting and filtering:
+
+```rust
+// Toggle a single row (by logical/display index)
+grid_state.apply(GridCommand::ToggleRowChecked(3));
+
+// Toggle the header checkbox — checks or unchecks every row
+// currently passing the active filter (or every row, if unfiltered)
+grid_state.apply(GridCommand::ToggleAllFilteredChecked);
+
+// Show/hide the column at runtime
+grid_state.apply(GridCommand::SetShowCheckboxColumn(true));
+
+// Change its width — the checkbox stays centered, so this also
+// controls the visual margin around it
+grid_state.apply(GridCommand::SetCheckboxColumnWidth(60.0));
+```
+
+`CheckboxTriState` (`Checked` / `Unchecked` / `Indeterminate`) describes the
+header checkbox's state — `Indeterminate` when some but not all rows in
+scope are checked. Clicking an indeterminate header checks every row in
+scope rather than unchecking them.
+
+On `GridCanvas` (the browser integration):
+
+| Method | Description |
+|---|---|
+| `checked_row_indices()` | Physical row ids currently checked |
+| `checkbox_header_state()` | Current `CheckboxTriState` of the header |
+| `set_show_checkbox_column(bool)` | Show/hide the column |
+| `set_on_checked_rows_changed(cb)` | Callback fired after any checkbox toggle |
+
+:::tip
+"Select all" only affects rows passing the active filter, not the entire
+dataset — checking rows hidden by a filter would be surprising for a
+subsequent bulk action (matches the convention used by most data-grid
+libraries).
+:::

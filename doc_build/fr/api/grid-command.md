@@ -4,7 +4,7 @@
 
 ```rust
 #[non_exhaustive]
-pub enum GridCommand { /* 44 variantes */ }
+pub enum GridCommand { /* 47 variantes */ }
 ```
 
 Toutes les mutations de `GridState` passent par `state.apply(GridCommand)`.
@@ -23,6 +23,21 @@ ExtendRowSelection(u64)
 SelectCol(usize)
 ExtendColSelection(usize)
 ```
+
+### Cases a cocher de ligne
+
+```rust
+ToggleRowChecked(u64)          // index logique de ligne — clic sur la colonne checkbox
+ToggleAllFilteredChecked       // bascule toutes les lignes qui passent le filtre actif (ou toutes les lignes, sans filtre)
+SetShowCheckboxColumn(bool)    // afficher/masquer la colonne de selection par cases a cocher
+```
+
+:::note
+L'etat coche (`GridState.checked_rows`) est suivi separement de
+`SelectionState`, indexe par id **physique** de ligne afin de survivre
+au tri/filtrage. Voir [Selection](/fr/concepts/selection.md#colonne-de-cases-a-cocher-selection-de-lignes)
+pour le modele complet.
+:::
 
 ### Défilement et viewport
 
