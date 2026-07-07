@@ -98,6 +98,10 @@ grid_state.apply(GridCommand::ToggleAllFilteredChecked);
 
 // Afficher/masquer la colonne a l'execution
 grid_state.apply(GridCommand::SetShowCheckboxColumn(true));
+
+// Changer sa largeur — la case reste centree, ce qui controle
+// aussi la marge visuelle autour d'elle
+grid_state.apply(GridCommand::SetCheckboxColumnWidth(60.0));
 ```
 
 `CheckboxTriState` (`Checked` / `Unchecked` / `Indeterminate`) decrit l'etat

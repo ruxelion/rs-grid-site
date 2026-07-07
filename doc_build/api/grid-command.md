@@ -30,6 +30,7 @@ ExtendColSelection(usize)
 ToggleRowChecked(u64)          // logical row index — click on the checkbox column
 ToggleAllFilteredChecked       // toggles all rows passing the active filter (or all rows, if unfiltered)
 SetShowCheckboxColumn(bool)    // show/hide the row-selection checkbox column
+SetCheckboxColumnWidth(f64)    // width in logical px (checkbox stays centered — controls the margin too)
 ```
 
 :::note

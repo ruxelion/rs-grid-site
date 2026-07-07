@@ -93,6 +93,10 @@ grid_state.apply(GridCommand::ToggleAllFilteredChecked);
 
 // Show/hide the column at runtime
 grid_state.apply(GridCommand::SetShowCheckboxColumn(true));
+
+// Change its width — the checkbox stays centered, so this also
+// controls the visual margin around it
+grid_state.apply(GridCommand::SetCheckboxColumnWidth(60.0));
 ```
 
 `CheckboxTriState` (`Checked` / `Unchecked` / `Indeterminate`) describes the

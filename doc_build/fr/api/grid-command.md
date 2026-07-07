@@ -30,6 +30,7 @@ ExtendColSelection(usize)
 ToggleRowChecked(u64)          // index logique de ligne — clic sur la colonne checkbox
 ToggleAllFilteredChecked       // bascule toutes les lignes qui passent le filtre actif (ou toutes les lignes, sans filtre)
 SetShowCheckboxColumn(bool)    // afficher/masquer la colonne de selection par cases a cocher
+SetCheckboxColumnWidth(f64)    // largeur en px logiques (la case reste centree — controle aussi la marge)
 ```
 
 :::note

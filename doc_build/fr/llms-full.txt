@@ -1,4 +1,178 @@
 ---
+url: /fr/getting-started.md
+---
+
+# Premiers pas
+
+## Prerequis
+
+- Toolchain Rust (stable, edition 2021)
+- [Trunk](https://trunk-rs.github.io/trunk/) pour compiler et servir les applications WASM
+- La cible `wasm32-unknown-unknown`
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo install trunk
+```
+
+## Demarrage rapide
+
+
+**[object Object]**
+
+Ajoutez `rs-grid-leptos` a votre `Cargo.toml` :
+```toml title="Cargo.toml"
+[dependencies]
+rs-grid-leptos = { path = "../rs-grid-leptos" }
+```
+Importez le composant et montez-le dans une vue Leptos :
+```rust title="src/main.rs"
+use leptos::*;
+use rs_grid_leptos::GridCanvas;
+
+#[component]
+pub fn App() -> impl IntoView {
+    view! {
+        <main style="width: 100vw; height: 100vh;">
+            <GridCanvas
+                rows=1_000_000_u64
+                cols=50_usize
+            />
+        </main>
+    }
+}
+
+fn main() {
+    leptos::mount_to_body(App);
+}
+```
+Lancez l'exemple :
+```bash
+cd examples/basic-leptos
+trunk serve
+```
+
+
+**[object Object]**
+
+Compilez le package WASM :
+```bash
+cd crates/rs-grid-web
+wasm-pack build --target web
+```
+Utilisez-le dans votre HTML :
+```html title="index.html"
+<canvas id="grid" style="width: 100vw; height: 100vh;"></canvas>
+<script type="module">
+  import init, { JsGrid } from './pkg/rs_grid_web.js';
+  await init();
+  const canvas = document.getElementById('grid');
+  const grid = new JsGrid(canvas, 1_000_000, 50);
+</script>
+```
+
+
+**[object Object]**
+
+Ajoutez `rs-grid-dioxus` a votre `Cargo.toml` :
+```toml title="Cargo.toml"
+[dependencies]
+rs-grid-dioxus = { path = "../rs-grid-dioxus" }
+```
+Importez le composant et montez-le dans une application Dioxus :
+```rust title="src/main.rs"
+use dioxus::prelude::*;
+use rs_grid_dioxus::{GridCanvas, ModelSlot};
+use rs_grid_core::model::GridModel;
+
+fn App() -> Element {
+    let model = use_hook(|| {
+        ModelSlot::new(GridModel::new(1_000_000, 50))
+    });
+    rsx! {
+        main { style: "width:100vw;height:100vh;",
+            GridCanvas { model: model.clone() }
+        }
+    }
+}
+
+fn main() {
+    dioxus::launch(App);
+}
+```
+Lancez l'exemple :
+```bash
+cd examples/basic-dioxus
+trunk serve
+```
+
+
+**[object Object]**
+
+Ajoutez `rs-grid-yew` a votre `Cargo.toml` :
+```toml title="Cargo.toml"
+[dependencies]
+rs-grid-yew = { path = "../rs-grid-yew" }
+```
+Importez le composant et montez-le dans une application Yew :
+```rust title="src/main.rs"
+use yew::prelude::*;
+use rs_grid_yew::{GridCanvas, wrap_model};
+use rs_grid_core::model::GridModel;
+
+#[function_component]
+fn App() -> Html {
+    let model = wrap_model(GridModel::new(1_000_000, 50));
+    html! {
+        <main style="width:100vw;height:100vh;">
+            <GridCanvas model={model} />
+        </main>
+    }
+}
+
+fn main() {
+    yew::Renderer::<App>::new().render();
+}
+```
+Lancez l'exemple :
+```bash
+cd examples/basic-yew
+trunk serve
+```
+
+
+Rendez-vous sur `http://localhost:8080`. Vous devriez voir un grid
+affichant 1 million de lignes a 60 fps.
+
+## Compiler pour la production
+
+```bash
+cd examples/basic-leptos
+trunk build --release
+```
+
+La sortie est generee dans `dist/`. Servez-la avec n'importe quel serveur de
+fichiers statiques ou utilisez l'[image Docker](/fr/deployment/docker.md)
+fournie.
+
+## Commandes du workspace
+
+| Commande                                  | Description                                        |
+| ----------------------------------------- | -------------------------------------------------- |
+| `cargo check --workspace`                 | Verification rapide des types pour tous les crates |
+| `cargo test --workspace`                  | Lancer tous les tests unitaires                    |
+| `cargo fmt --all`                         | Formater l'ensemble du workspace                   |
+| `cargo clippy --workspace -- -D warnings` | Lint avec warnings traites comme erreurs           |
+| `trunk serve` (dans le dossier exemple)   | Serveur de dev avec hot reload                     |
+
+:::tip
+`rs-grid-core` n'a aucune dependance WASM — ses tests unitaires s'executent
+avec un simple `cargo test`, sans navigateur.
+:::
+
+
+
+---
 url: /fr/api/column-def.md
 ---
 
@@ -458,6 +632,7 @@ ExtendColSelection(usize)
 ToggleRowChecked(u64)          // index logique de ligne — clic sur la colonne checkbox
 ToggleAllFilteredChecked       // bascule toutes les lignes qui passent le filtre actif (ou toutes les lignes, sans filtre)
 SetShowCheckboxColumn(bool)    // afficher/masquer la colonne de selection par cases a cocher
+SetCheckboxColumnWidth(f64)    // largeur en px logiques (la case reste centree — controle aussi la marge)
 ```
 
 :::note
@@ -1552,6 +1727,10 @@ grid_state.apply(GridCommand::ToggleAllFilteredChecked);
 
 // Afficher/masquer la colonne a l'execution
 grid_state.apply(GridCommand::SetShowCheckboxColumn(true));
+
+// Changer sa largeur — la case reste centree, ce qui controle
+// aussi la marge visuelle autour d'elle
+grid_state.apply(GridCommand::SetCheckboxColumnWidth(60.0));
 ```
 
 `CheckboxTriState` (`Checked` / `Unchecked` / `Indeterminate`) decrit l'etat
@@ -4827,180 +5006,6 @@ canvas.set_native_validation_tooltip(false);
 
 
 ---
-url: /fr/getting-started.md
----
-
-# Premiers pas
-
-## Prerequis
-
-- Toolchain Rust (stable, edition 2021)
-- [Trunk](https://trunk-rs.github.io/trunk/) pour compiler et servir les applications WASM
-- La cible `wasm32-unknown-unknown`
-
-```bash
-rustup target add wasm32-unknown-unknown
-cargo install trunk
-```
-
-## Demarrage rapide
-
-
-**[object Object]**
-
-Ajoutez `rs-grid-leptos` a votre `Cargo.toml` :
-```toml title="Cargo.toml"
-[dependencies]
-rs-grid-leptos = { path = "../rs-grid-leptos" }
-```
-Importez le composant et montez-le dans une vue Leptos :
-```rust title="src/main.rs"
-use leptos::*;
-use rs_grid_leptos::GridCanvas;
-
-#[component]
-pub fn App() -> impl IntoView {
-    view! {
-        <main style="width: 100vw; height: 100vh;">
-            <GridCanvas
-                rows=1_000_000_u64
-                cols=50_usize
-            />
-        </main>
-    }
-}
-
-fn main() {
-    leptos::mount_to_body(App);
-}
-```
-Lancez l'exemple :
-```bash
-cd examples/basic-leptos
-trunk serve
-```
-
-
-**[object Object]**
-
-Compilez le package WASM :
-```bash
-cd crates/rs-grid-web
-wasm-pack build --target web
-```
-Utilisez-le dans votre HTML :
-```html title="index.html"
-<canvas id="grid" style="width: 100vw; height: 100vh;"></canvas>
-<script type="module">
-  import init, { JsGrid } from './pkg/rs_grid_web.js';
-  await init();
-  const canvas = document.getElementById('grid');
-  const grid = new JsGrid(canvas, 1_000_000, 50);
-</script>
-```
-
-
-**[object Object]**
-
-Ajoutez `rs-grid-dioxus` a votre `Cargo.toml` :
-```toml title="Cargo.toml"
-[dependencies]
-rs-grid-dioxus = { path = "../rs-grid-dioxus" }
-```
-Importez le composant et montez-le dans une application Dioxus :
-```rust title="src/main.rs"
-use dioxus::prelude::*;
-use rs_grid_dioxus::{GridCanvas, ModelSlot};
-use rs_grid_core::model::GridModel;
-
-fn App() -> Element {
-    let model = use_hook(|| {
-        ModelSlot::new(GridModel::new(1_000_000, 50))
-    });
-    rsx! {
-        main { style: "width:100vw;height:100vh;",
-            GridCanvas { model: model.clone() }
-        }
-    }
-}
-
-fn main() {
-    dioxus::launch(App);
-}
-```
-Lancez l'exemple :
-```bash
-cd examples/basic-dioxus
-trunk serve
-```
-
-
-**[object Object]**
-
-Ajoutez `rs-grid-yew` a votre `Cargo.toml` :
-```toml title="Cargo.toml"
-[dependencies]
-rs-grid-yew = { path = "../rs-grid-yew" }
-```
-Importez le composant et montez-le dans une application Yew :
-```rust title="src/main.rs"
-use yew::prelude::*;
-use rs_grid_yew::{GridCanvas, wrap_model};
-use rs_grid_core::model::GridModel;
-
-#[function_component]
-fn App() -> Html {
-    let model = wrap_model(GridModel::new(1_000_000, 50));
-    html! {
-        <main style="width:100vw;height:100vh;">
-            <GridCanvas model={model} />
-        </main>
-    }
-}
-
-fn main() {
-    yew::Renderer::<App>::new().render();
-}
-```
-Lancez l'exemple :
-```bash
-cd examples/basic-yew
-trunk serve
-```
-
-
-Rendez-vous sur `http://localhost:8080`. Vous devriez voir un grid
-affichant 1 million de lignes a 60 fps.
-
-## Compiler pour la production
-
-```bash
-cd examples/basic-leptos
-trunk build --release
-```
-
-La sortie est generee dans `dist/`. Servez-la avec n'importe quel serveur de
-fichiers statiques ou utilisez l'[image Docker](/fr/deployment/docker.md)
-fournie.
-
-## Commandes du workspace
-
-| Commande                                  | Description                                        |
-| ----------------------------------------- | -------------------------------------------------- |
-| `cargo check --workspace`                 | Verification rapide des types pour tous les crates |
-| `cargo test --workspace`                  | Lancer tous les tests unitaires                    |
-| `cargo fmt --all`                         | Formater l'ensemble du workspace                   |
-| `cargo clippy --workspace -- -D warnings` | Lint avec warnings traites comme erreurs           |
-| `trunk serve` (dans le dossier exemple)   | Serveur de dev avec hot reload                     |
-
-:::tip
-`rs-grid-core` n'a aucune dependance WASM — ses tests unitaires s'executent
-avec un simple `cargo test`, sans navigateur.
-:::
-
-
-
----
 url: /fr/howto/custom-theme.md
 ---
 
@@ -6796,6 +6801,7 @@ du theme clair est utilisee.
 | `--rs-grid-scrollbar-thumb`        | `scrollbar_thumb`        | `rgba(100,100,110,0.63)` | `rgba(169,177,214,0.4)`  | Couleur du curseur de la scrollbar                                                                                                                                                         |
 | `--rs-grid-row-alt-bg`             | `row_alt_bg`             | `rgb(252,252,253)`       | `rgb(30,32,48)`          | Arriere-plan des lignes alternees                                                                                                                                                          |
 | `--rs-grid-row-hover-bg`           | `row_hover_bg`           | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Superposition au survol des lignes                                                                                                                                                         |
+| `--rs-grid-checked-row-bg`         | `checked_row_bg`         | `rgba(66,42,213,0.09)`   | `rgba(99,80,240,0.12)`   | Superposition de fond pour une ligne cochee via la [colonne de cases a cocher](/fr/concepts/selection.md#colonne-de-cases-a-cocher-selection-de-lignes)                                    |
 | `--rs-grid-locked-cell-bg`         | `locked_cell_bg`         | `rgba(0,0,0,0.04)`       | `rgba(255,255,255,0.04)` | Superposition de fond pour une cellule non-editable (voir [Verrouillage par cellule](/fr/features/editing.md#verrouillage-par-cellule))                                                    |
 | `--rs-grid-locked-cell-text`       | `locked_cell_text`       | `rgba(24,29,31,0.55)`    | `rgba(208,208,208,0.55)` | Couleur du texte pour une cellule non-editable                                                                                                                                             |
 | `--rs-grid-invalid-cell-border`    | `invalid_cell_border`    | `rgb(239,68,68)`         | `rgb(220,38,38)`         | Bordure d'une cellule dont la valeur actuelle echoue la validation, affichee meme au repos (voir [Validation](/fr/features/validation.md))                                                 |
