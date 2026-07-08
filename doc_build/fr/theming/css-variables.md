@@ -41,17 +41,17 @@ du theme clair est utilisee.
 
 ## Variables de taille et typographie
 
-| Variable CSS                          | Champ Theme                 | Defaut  | Type | Description                                                   |
-| ------------------------------------- | --------------------------- | ------- | ---- | ------------------------------------------------------------- |
-| `--rs-grid-font-size`                 | `font_size`                 | `14px`  | px   | Taille de police des cellules                                 |
-| `--rs-grid-header-font-size`          | `header_font_size`          | `12px`  | px   | Taille de police des en-tetes                                 |
-| `--rs-grid-header-font-bold`          | `header_font_bold`          | `true`  | bool | En-tetes en gras (`true`/`false`/`1`/`0`)                     |
-| `--rs-grid-cell-padding`              | `cell_padding`              | `10px`  | px   | Padding horizontal des cellules                               |
-| `--rs-grid-scrollbar-width`           | `scrollbar_width`           | `14px`  | px   | Largeur de la piste et du curseur de la scrollbar             |
-| `--rs-grid-scrollbar-radius`          | `scrollbar_radius`          | `4px`   | px   | Rayon des coins du curseur de la scrollbar                    |
-| `--rs-grid-invalid-cell-border-width` | `invalid_cell_border_width` | `1.5px` | px   | Epaisseur de la bordure de cellule invalide au repos          |
-| `--rs-grid-grid-line-width`           | `grid_line_width`           | `1px`   | px   | Epaisseur de la ligne horizontale entre les lignes de donnees |
-| `--rs-grid-column-separator-width`    | `column_separator_width`    | `1px`   | px   | Epaisseur de la ligne verticale separant les colonnes         |
+| Variable CSS                          | Champ Theme                 | Defaut | Type | Description                                                   |
+| ------------------------------------- | --------------------------- | ------ | ---- | ------------------------------------------------------------- |
+| `--rs-grid-font-size`                 | `font_size`                 | `14px` | px   | Taille de police des cellules                                 |
+| `--rs-grid-header-font-size`          | `header_font_size`          | `12px` | px   | Taille de police des en-tetes                                 |
+| `--rs-grid-header-font-bold`          | `header_font_bold`          | `true` | bool | En-tetes en gras (`true`/`false`/`1`/`0`)                     |
+| `--rs-grid-cell-padding`              | `cell_padding`              | `10px` | px   | Padding horizontal des cellules                               |
+| `--rs-grid-scrollbar-width`           | `scrollbar_width`           | `14px` | px   | Largeur de la piste et du curseur de la scrollbar             |
+| `--rs-grid-scrollbar-radius`          | `scrollbar_radius`          | `4px`  | px   | Rayon des coins du curseur de la scrollbar                    |
+| `--rs-grid-invalid-cell-border-width` | `invalid_cell_border_width` | `1px`  | px   | Epaisseur de la bordure de cellule invalide au repos          |
+| `--rs-grid-grid-line-width`           | `grid_line_width`           | `1px`  | px   | Epaisseur de la ligne horizontale entre les lignes de donnees |
+| `--rs-grid-column-separator-width`    | `column_separator_width`    | `1px`  | px   | Epaisseur de la ligne verticale separant les colonnes         |
 
 ## Exemple : theme sombre personnalise
 
