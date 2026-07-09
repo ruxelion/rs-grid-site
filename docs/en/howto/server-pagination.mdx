@@ -119,7 +119,9 @@ view! {
 - For each unseen page, it calls `build_url` and fetches it.
 - While a page loads, affected cells show `CellStatus::Loading` (skeleton).
 - When the response arrives, `parse_response` converts it to `PageFetchResponse`.
-- The grid calls `GridCommand::NotifyPageLoaded` internally and re-renders.
+- The grid calls `GridCommand::SetTotalRowCount` (keeps the row-number
+  gutter sized to the real total — see [PageCache data source](/data/page-cache))
+  then `GridCommand::NotifyPageLoaded` internally, and re-renders.
 
 ## Sorting and filtering server-side
 

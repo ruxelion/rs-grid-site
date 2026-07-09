@@ -40,7 +40,11 @@ needed_pages() → mark_pending() → fetch → insert_page() → NotifyPageLoad
 2. **Mark as pending** — `cache.mark_pending(page_num)` prevents duplicate fetches
 3. **Fetch data** — your application fetches the data from the server
 4. **Insert the page** — `cache.insert_page(page_num, rows)` stores the data
-5. **Notify the grid** — `state.apply(GridCommand::NotifyPageLoaded)` triggers re-render
+5. **Update the total** — `cache.set_total_rows(n)` when the server response
+   reveals the real count; also dispatch
+   `state.apply(GridCommand::SetTotalRowCount(n))` (see *Row-number gutter
+   width* below — this is not automatic)
+6. **Notify the grid** — `state.apply(GridCommand::NotifyPageLoaded)` triggers re-render
 
 ## FetchConfig (automatic fetching)
 
@@ -70,7 +74,8 @@ The fetcher automatically:
 - Prefetches `buffer_pages` pages ahead and behind
 - Spawns async `window.fetch()` calls
 - Parses JSON responses via your `parse_response` closure
-- Updates the cache and triggers `NotifyPageLoaded`
+- Updates the cache, dispatches `SetTotalRowCount`, and triggers
+  `NotifyPageLoaded`
 
 ## API reference
 
@@ -111,6 +116,22 @@ eviction queue.
 
 When sort or filter changes in server-side mode, call `cache.clear()` to
 invalidate all pages, then let the fetcher re-fetch with the new parameters.
+
+## Row-number gutter width
+
+The row-number gutter's width (`GridModel.row_number_width`) is sized from
+the digit count of the row total (`GridModel::compute_row_number_width`) —
+when you start from a placeholder count (e.g. `PageCacheDataSource::new(0,
+page_size)` per the [server-pagination guide](/howto/server-pagination)),
+it's sized for that placeholder, not the real total.
+
+`GridCommand::SetTotalRowCount(n)` recomputes it once the real total is
+known — the `FetchConfig` fetcher (above) dispatches this automatically
+alongside `set_total_rows`/`NotifyPageLoaded`, so you only need to think
+about this if you're driving the page cache manually (steps 1–6 above). If
+you've set an explicit width via `GridCommand::SetRowNumberWidth`, it's
+treated as a deliberate override and `SetTotalRowCount` no longer touches
+it.
 
 ## Shared state
 

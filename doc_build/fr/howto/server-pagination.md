@@ -113,7 +113,10 @@ view! {
 - Pour chaque page non vue, elle appelle `build_url` et la charge.
 - Pendant le chargement, les cellules affichent `CellStatus::Loading` (squelette).
 - À l'arrivée de la réponse, `parse_response` la convertit en `PageFetchResponse`.
-- La grille appelle `GridCommand::NotifyPageLoaded` en interne et se re-rend.
+- La grille appelle `GridCommand::SetTotalRowCount` (garde la gouttière des
+  numéros de ligne dimensionnée pour le vrai total — voir [Données côté
+  serveur](/fr/data/page-cache.md)) puis `GridCommand::NotifyPageLoaded` en
+  interne, et se re-rend.
 
 ## Tri et filtrage côté serveur
 

@@ -37,7 +37,11 @@ needed_pages() → mark_pending() → fetch → insert_page() → NotifyPageLoad
 2. **Marquer comme en attente** — `cache.mark_pending(page_num)` empeche les requetes en double
 3. **Recuperer les donnees** — votre application recupere les donnees depuis le serveur
 4. **Inserer la page** — `cache.insert_page(page_num, rows)` stocke les donnees
-5. **Notifier la grille** — `state.apply(GridCommand::NotifyPageLoaded)` declenche un nouveau rendu
+5. **Mettre a jour le total** — `cache.set_total_rows(n)` quand la reponse
+   serveur revele le vrai total ; dispatchez aussi
+   `state.apply(GridCommand::SetTotalRowCount(n))` (voir _Largeur de la
+   gouttiere des numeros de ligne_ ci-dessous — ce n'est pas automatique)
+6. **Notifier la grille** — `state.apply(GridCommand::NotifyPageLoaded)` declenche un nouveau rendu
 
 ## FetchConfig (recuperation automatique)
 
@@ -68,7 +72,8 @@ Le coordinateur de recuperation effectue automatiquement :
 - Le pre-chargement de `buffer_pages` pages en avance et en arriere
 - Le lancement d'appels `window.fetch()` asynchrones
 - L'analyse des reponses JSON via votre closure `parse_response`
-- La mise a jour du cache et le declenchement de `NotifyPageLoaded`
+- La mise a jour du cache, le dispatch de `SetTotalRowCount`, et le
+  declenchement de `NotifyPageLoaded`
 
 ## Reference API
 
@@ -110,6 +115,23 @@ de file d'eviction.
 Lorsque le tri ou le filtre change en mode server-side, appelez `cache.clear()`
 pour invalider toutes les pages, puis laissez le coordinateur re-recuperer
 les donnees avec les nouveaux parametres.
+
+## Largeur de la gouttiere des numeros de ligne
+
+La largeur de la gouttiere des numeros de ligne (`GridModel.row_number_width`)
+est calculee a partir du nombre de chiffres du total de lignes
+(`GridModel::compute_row_number_width`) — si vous demarrez avec un total
+provisoire (ex. `PageCacheDataSource::new(0, page_size)` comme dans le
+[guide server-pagination](/fr/howto/server-pagination.md)), elle est dimensionnee
+pour ce total provisoire, pas pour le vrai total.
+
+`GridCommand::SetTotalRowCount(n)` la recalcule une fois le vrai total connu
+— le coordinateur `FetchConfig` (ci-dessus) dispatche cette commande
+automatiquement, en plus de `set_total_rows`/`NotifyPageLoaded`, donc vous
+n'avez a y penser que si vous pilotez le cache de pages manuellement (etapes
+1 a 6 ci-dessus). Si vous avez fixe une largeur explicite via
+`GridCommand::SetRowNumberWidth`, elle est traitee comme une surcharge
+deliberee et `SetTotalRowCount` ne la modifie plus.
 
 ## Etat partage
 
