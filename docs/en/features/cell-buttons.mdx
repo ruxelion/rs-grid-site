@@ -79,6 +79,26 @@ let col = ColumnDef::new("actions", "Actions", 160.0)
     ]);
 ```
 
+## Visibility
+
+By default every row in a column shows the same buttons. To hide buttons on
+rows with no meaningful action (e.g. a product with no known URL), attach a
+dynamic per-row predicate:
+
+```rust
+let col = ColumnDef::new("actions", "Actions", 160.0)
+    .with_cell_buttons(vec![ButtonDef::new("open", "Open", ButtonStyle::Primary)])
+    .cell_buttons_visible_when(|row, model| {
+        model.get_cell(row, "url").as_deref().is_some_and(|u| !u.is_empty())
+    });
+```
+
+The predicate receives the row index and the full `GridModel`, so it can read
+any column — not just this one — mirroring `ColumnDef::editable_when`. `None`
+(the default) shows the buttons on every row, matching the previous
+behaviour. When hidden, nothing is drawn and no click hit-zone is registered
+for that row.
+
 ## Click callback
 
 ### Web layer (`WebGridCanvas`)

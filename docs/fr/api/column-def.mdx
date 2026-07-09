@@ -141,10 +141,28 @@ passé. Retourne le message du premier échec, le cas échéant.
 Voir [Validation](/fr/features/validation) pour `InvalidEditMode` et le
 retour live à chaque frappe.
 
+## RowPredicate\<T\>
+
+```rust
+pub struct RowPredicate<T>(pub Rc<dyn Fn(u64, &GridModel) -> T>);
+```
+
+Wrapper de callback générique par ligne, qui porte `EditablePredicate`,
+`CellDecorator`, et `CellButtonsVisible` ci-dessous — chacun est un alias de
+type sur `RowPredicate<T>` pour un `T` différent, pas une implémentation
+séparée. `EditablePredicate` et `CellButtonsVisible` sont tous deux
+`RowPredicate<bool>`, donc c'est littéralement le même type (et affichent le
+même texte `Debug`) ; `CellDecorator` est `RowPredicate<Option<CellDecoration>>`.
+
+| Méthode | Description |
+|--------|-------------|
+| `new(f)` | Encapsule une closure en callback |
+| `evaluate(row: u64, model: &GridModel)` | Exécute le callback, retourne `T` |
+
 ## EditablePredicate
 
 ```rust
-pub struct EditablePredicate(pub Rc<dyn Fn(u64, &GridModel) -> bool>);
+pub type EditablePredicate = RowPredicate<bool>;
 ```
 
 Une surcharge dynamique de l'éditabilité par cellule, attachée à
@@ -160,10 +178,7 @@ EditablePredicate::new(|row, model| {
 })
 ```
 
-| Méthode | Description |
-|--------|-------------|
-| `new(f)` | Encapsule une closure en prédicat |
-| `is_editable(row: u64, model: &GridModel)` | Exécute le prédicat ; retourne `true`/`false` |
+Voir [RowPredicate\<T\>](#rowpredicatet) ci-dessus pour `new`/`evaluate`.
 
 ### Sucre syntaxique sur `ColumnDef`
 
@@ -225,12 +240,12 @@ qu'avec une syntaxe littérale de struct :
 ## CellDecorator
 
 ```rust
-pub struct CellDecorator(pub Rc<dyn Fn(u64, &GridModel) -> Option<CellDecoration>>);
+pub type CellDecorator = RowPredicate<Option<CellDecoration>>;
 ```
 
 Un callback dynamique de décoration par cellule, attaché à
-`ColumnDef.decorator`. Reproduit exactement la forme d'
-[`EditablePredicate`](#editablepredicate) : reçoit l'index de ligne et le
+`ColumnDef.decorator`. Même famille [`RowPredicate<T>`](#rowpredicatet)
+qu'`EditablePredicate` (`T` différent) : reçoit l'index de ligne et le
 [`GridModel`](/fr/api/grid-model) complet, ce qui permet d'implémenter une
 logique inter-colonnes — par ex. signaler une cellule quand une colonne
 jumelle est incohérente.
@@ -245,10 +260,7 @@ CellDecorator::new(|row, model| {
 })
 ```
 
-| Méthode | Description |
-|--------|-------------|
-| `new(f)` | Encapsule une closure en décorateur |
-| `decorate(row: u64, model: &GridModel)` | Exécute la closure ; retourne `Option<CellDecoration>` |
+Voir [RowPredicate\<T\>](#rowpredicatet) ci-dessus pour `new`/`evaluate`.
 
 ### Sucre syntaxique sur `ColumnDef`
 
@@ -269,6 +281,48 @@ purement cosmétique et n'est pas affectée par
 
 Voir [Décoration par cellule](/fr/features/editing#décoration-par-cellule)
 pour le guide complet.
+
+## CellButtonsVisible
+
+```rust
+pub type CellButtonsVisible = RowPredicate<bool>;
+```
+
+Une surcharge dynamique de visibilité par ligne pour
+`ColumnDef.cell_buttons`, attachée à `ColumnDef.cell_buttons_visible`. Même
+famille [`RowPredicate<T>`](#rowpredicatet) qu'`EditablePredicate`/
+`CellDecorator` — en fait exactement le même type concret
+qu'`EditablePredicate` (`RowPredicate<bool>`) : reçoit l'index de ligne et
+le [`GridModel`](/fr/api/grid-model) complet, ce qui permet d'implémenter
+une logique inter-colonnes — par ex. masquer un bouton quand une colonne
+URL jumelle est vide.
+
+```rust
+CellButtonsVisible::new(|row, model| {
+    model.get_cell(row, "url").as_deref().is_some_and(|u| !u.is_empty())
+})
+```
+
+Voir [RowPredicate\<T\>](#rowpredicatet) ci-dessus pour `new`/`evaluate`.
+
+### Sucre syntaxique sur `ColumnDef`
+
+| Méthode | Définit | Retour |
+|--------|------|---------|
+| `.cell_buttons_visible_when(f)` | `cell_buttons_visible` | `Self` |
+
+### `ColumnDef::are_cell_buttons_visible`
+
+```rust
+pub fn are_cell_buttons_visible(&self, row: u64, model: &GridModel) -> bool
+```
+
+Résout si `cell_buttons` doit être dessiné pour `row`. Comme
+`cell_decoration`, il n'y a pas de garde statique — `true` tant qu'aucun
+prédicat n'est défini (comportement inchangé).
+
+Voir [Boutons de cellule](/fr/features/cell-buttons#visibilité) pour le
+guide complet.
 
 ## CellEditor
 

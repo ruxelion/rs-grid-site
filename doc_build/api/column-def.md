@@ -138,10 +138,28 @@ first failure's message, if any.
 See [Validation](/features/validation.md) for `InvalidEditMode` and live
 per-keystroke feedback.
 
+## RowPredicate\<T>
+
+```rust
+pub struct RowPredicate<T>(pub Rc<dyn Fn(u64, &GridModel) -> T>);
+```
+
+Generic per-row callback wrapper backing `EditablePredicate`, `CellDecorator`,
+and `CellButtonsVisible` below — each is a type alias over `RowPredicate<T>`
+for a different `T`, not a separate implementation. `EditablePredicate` and
+`CellButtonsVisible` are both `RowPredicate<bool>`, so they're the literal
+same type (and print identical `Debug` output); `CellDecorator` is
+`RowPredicate<Option<CellDecoration>>`.
+
+| Method                                  | Description                     |
+| --------------------------------------- | ------------------------------- |
+| `new(f)`                                | Wrap a closure as a callback    |
+| `evaluate(row: u64, model: &GridModel)` | Run the callback, returning `T` |
+
 ## EditablePredicate
 
 ```rust
-pub struct EditablePredicate(pub Rc<dyn Fn(u64, &GridModel) -> bool>);
+pub type EditablePredicate = RowPredicate<bool>;
 ```
 
 A dynamic per-cell editability override, attached to `ColumnDef.editable_predicate`.
@@ -155,10 +173,7 @@ EditablePredicate::new(|row, model| {
 })
 ```
 
-| Method                                     | Description                               |
-| ------------------------------------------ | ----------------------------------------- |
-| `new(f)`                                   | Wrap a closure as a predicate             |
-| `is_editable(row: u64, model: &GridModel)` | Run the predicate; returns `true`/`false` |
+See [RowPredicate\<T>](#rowpredicatet) above for `new`/`evaluate`.
 
 ### Builder sugar on `ColumnDef`
 
@@ -219,14 +234,14 @@ struct-literal syntax:
 ## CellDecorator
 
 ```rust
-pub struct CellDecorator(pub Rc<dyn Fn(u64, &GridModel) -> Option<CellDecoration>>);
+pub type CellDecorator = RowPredicate<Option<CellDecoration>>;
 ```
 
 A dynamic per-cell decoration callback, attached to `ColumnDef.decorator`.
-Mirrors [`EditablePredicate`](#editablepredicate) exactly in shape:
-receives the row index and the full [`GridModel`](/api/grid-model.md), so it
-can implement cross-column logic — e.g. flag a cell when a paired column
-is inconsistent.
+Same [`RowPredicate<T>`](#rowpredicatet) family as `EditablePredicate`
+(different `T`): receives the row index and the full
+[`GridModel`](/api/grid-model.md), so it can implement cross-column logic —
+e.g. flag a cell when a paired column is inconsistent.
 
 ```rust
 CellDecorator::new(|row, model| {
@@ -238,10 +253,7 @@ CellDecorator::new(|row, model| {
 })
 ```
 
-| Method                                  | Description                                       |
-| --------------------------------------- | ------------------------------------------------- |
-| `new(f)`                                | Wrap a closure as a decorator                     |
-| `decorate(row: u64, model: &GridModel)` | Run the closure; returns `Option<CellDecoration>` |
+See [RowPredicate\<T>](#rowpredicatet) above for `new`/`evaluate`.
 
 ### Builder sugar on `ColumnDef`
 
@@ -261,6 +273,46 @@ is no static gate — a decoration is purely cosmetic and not affected by
 
 See [Per-cell decoration](/features/editing.md#per-cell-decoration) for the
 full feature guide.
+
+## CellButtonsVisible
+
+```rust
+pub type CellButtonsVisible = RowPredicate<bool>;
+```
+
+A dynamic per-row visibility override for `ColumnDef.cell_buttons`, attached
+to `ColumnDef.cell_buttons_visible`. Same [`RowPredicate<T>`](#rowpredicatet)
+family as `EditablePredicate`/`CellDecorator` — in fact the exact same
+concrete type as `EditablePredicate` (`RowPredicate<bool>`): receives the
+row index and the full [`GridModel`](/api/grid-model.md), so it can implement
+cross-column logic — e.g. hide a button when a paired URL column is empty.
+
+```rust
+CellButtonsVisible::new(|row, model| {
+    model.get_cell(row, "url").as_deref().is_some_and(|u| !u.is_empty())
+})
+```
+
+See [RowPredicate\<T>](#rowpredicatet) above for `new`/`evaluate`.
+
+### Builder sugar on `ColumnDef`
+
+| Method                          | Sets                   | Returns |
+| ------------------------------- | ---------------------- | ------- |
+| `.cell_buttons_visible_when(f)` | `cell_buttons_visible` | `Self`  |
+
+### `ColumnDef::are_cell_buttons_visible`
+
+```rust
+pub fn are_cell_buttons_visible(&self, row: u64, model: &GridModel) -> bool
+```
+
+Resolves whether `cell_buttons` should be drawn for `row`. Like
+`cell_decoration`, there is no static gate — `true` whenever no predicate is
+set (today's behaviour).
+
+See [Cell Buttons](/features/cell-buttons.md#visibility) for the full feature
+guide.
 
 ## CellEditor
 

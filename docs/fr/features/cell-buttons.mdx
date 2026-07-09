@@ -81,6 +81,26 @@ let col = ColumnDef::new("actions", "Actions", 160.0)
     ]);
 ```
 
+## Visibilité
+
+Par défaut, chaque ligne d'une colonne affiche les mêmes boutons. Pour masquer
+le bouton sur les lignes sans action pertinente (par exemple un produit sans
+URL connue), attacher un prédicat dynamique par ligne :
+
+```rust
+let col = ColumnDef::new("actions", "Actions", 160.0)
+    .with_cell_buttons(vec![ButtonDef::new("open", "Ouvrir", ButtonStyle::Primary)])
+    .cell_buttons_visible_when(|row, model| {
+        model.get_cell(row, "url").as_deref().is_some_and(|u| !u.is_empty())
+    });
+```
+
+Le prédicat reçoit l'index de ligne et le `GridModel` complet, ce qui permet
+de lire n'importe quelle colonne — pas seulement celle-ci — sur le même
+principe que `ColumnDef::editable_when`. `None` (valeur par défaut) affiche
+les boutons sur chaque ligne, comme avant. Quand ils sont masqués, rien n'est
+dessiné et aucune zone de clic n'est enregistrée pour cette ligne.
+
 ## Callback de clic
 
 ### Couche web (`WebGridCanvas`)
