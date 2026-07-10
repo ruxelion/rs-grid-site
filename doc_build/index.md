@@ -9,7 +9,7 @@ A data grid that never slows down. Scroll through millions of rows as smoothly a
 
 ∞rows, zero lag
 
-<52 µsper frame at 60fps
+<51 µsper frame at 60fps
 
 63.8 nshit-test (1 quadrillion rows)
 

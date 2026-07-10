@@ -9,7 +9,7 @@ Un data grid qui ne ralentit jamais. Parcourez des millions de lignes aussi flui
 
 ∞lignes, zéro latence
 
-<52 µspar frame à 60fps
+<51 µspar frame à 60fps
 
 63.8 nshit-test (1 quadrillion de lignes)
 
