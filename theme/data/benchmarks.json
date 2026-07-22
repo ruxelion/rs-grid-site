@@ -1,32 +1,32 @@
 {
   "frame_us": {
-    "cols1000_1B": 53.1,
-    "cols100_10M": 52,
-    "cols20_10k": 27,
-    "cols50_1M": 42.1,
-    "cols50_1Q": 43.2
+    "cols1000_1B": 63.4,
+    "cols100_10M": 62.1,
+    "cols20_10k": 40.7,
+    "cols50_1M": 50.5,
+    "cols50_1Q": 52.6
   },
-  "generated": "2026-07-22T09:23:34.278Z",
+  "generated": "2026-07-22T11:55:26.511Z",
   "hit_test_ns": {
-    "cell_1000cols": 17.6,
-    "cell_100cols": 13.7,
-    "cell_10cols": 10.8,
-    "extreme_1B_rows": 39.5,
-    "extreme_1Q_rows": 27.9,
-    "extreme_1k_rows": 29.6
+    "cell_1000cols": 34.5,
+    "cell_100cols": 27.6,
+    "cell_10cols": 21.5,
+    "extreme_1B_rows": 75.4,
+    "extreme_1Q_rows": 62.7,
+    "extreme_1k_rows": 64.7
   },
   "init_us": {
-    "cols_100": 15,
-    "cols_1000": 147.6,
-    "cols_20": 2.6,
-    "cols_5": 0.7,
-    "cols_50": 7.1,
-    "rows_100M": 2.7,
-    "rows_100k": 2.8,
-    "rows_1B": 2.7,
-    "rows_1M": 2.7,
-    "rows_1Q": 2.7,
-    "rows_1k": 2.4
+    "cols_100": 17.3,
+    "cols_1000": 168.4,
+    "cols_20": 3.2,
+    "cols_5": 0.8,
+    "cols_50": 8.6,
+    "rows_100M": 3.2,
+    "rows_100k": 3.3,
+    "rows_1B": 3.3,
+    "rows_1M": 3.2,
+    "rows_1Q": 3.2,
+    "rows_1k": 3.2
   },
   "memory_bytes_per_row": {
     "fn_datasource": 0,
@@ -34,10 +34,10 @@
     "vec_empty": 56
   },
   "sample_size": 10,
-  "sha": "8386779",
+  "sha": "f40ea85",
   "sort_ms": {
-    "numeric_cached_100k": 10.3,
-    "numeric_cold_100k": 13.7,
-    "string_cold_100k": 14.7
+    "numeric_cached_100k": 12,
+    "numeric_cold_100k": 16.4,
+    "string_cold_100k": 20
   }
 }
