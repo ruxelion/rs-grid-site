@@ -2,10 +2,6 @@
 
 > High-performance Rust/WASM data grid engine for the web
 
-## Docs
-
-- [Premiers pas](/fr/getting-started.md): Installez rs-grid et affichez votre premier data grid.
-
 ## Others
 
 - [API ColumnDef](/fr/api/column-def.md): Définition de colonne, formats de cellule et éditeurs de cellule.
@@ -36,7 +32,7 @@
 - [Colonnes](/fr/features/columns.md): Définition des colonnes, redimensionnement, déplacement, épinglage et ajustement automatique.
 - [Menu contextuel](/fr/features/context-menu.md): Menu contextuel au clic droit avec actions integrees et personnalisees.
 - [Édition](/fr/features/editing.md): Édition de cellules en ligne avec champ texte et menu déroulant.
-- [Filtrage](/fr/features/filtering.md): Filtrage textuel par colonne avec correspondance insensible à la casse.
+- [Filtrage](/fr/features/filtering.md): Filtrage par condition, colonne par colonne (contient, égal, supérieur à, ...), plus une liste à cases à cocher façon AG Grid, via une ligne de filtre flottante optionnelle et un popup, ou l'API programmatique.
 - [Hit-Testing](/fr/features/hit-testing.md): Resolution pointeur-vers-cellule en O(log n) pour les clics et le survol.
 - [Navigation clavier](/fr/features/keyboard.md): Touches directionnelles, extension de selection, raccourcis d'edition et modele de focus.
 - [Localisation](/fr/features/localization.md): Traduisez l'interface de la grille dans n'importe quelle langue avec les fichiers de locale intégrés ou des traductions personnalisées.
@@ -48,6 +44,7 @@
 - [Tri](/fr/features/sorting.md): Tri par colonne avec les états croissant, décroissant et aucun.
 - [Annuler et Retablir](/fr/features/undo-redo.md): Actions reversibles avec une pile d'historique a capacite fixe.
 - [Validation](/fr/features/validation.md): Règles de validation déclaratives par colonne, politique bloquer-ou-annuler, et retour live à chaque frappe pour les éditions.
+- [Premiers pas](/fr/getting-started.md): Installez rs-grid et affichez votre premier data grid.
 - [Guide : Thème personnalisé](/fr/howto/custom-theme.md): Appliquer un thème visuel personnalisé à rs-grid via les variables CSS ou la struct Theme.
 - [Guide : Sélection programmatique](/fr/howto/programmatic-selection.md): Sélectionner des cellules, lignes et plages via GridCommand, et lire l'état de sélection.
 - [Guide : Pagination côté serveur](/fr/howto/server-pagination.md): Charger de grands jeux de données depuis un serveur avec PageCacheDataSource et FetchConfig.

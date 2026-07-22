@@ -76,9 +76,15 @@ Pour un redimensionnement programmatique, utiliser `ResizeColumn` directement.
 ToggleSort { col_key: String }               // alterne asc → desc → off
 SetSort { col_key: String, dir: SortDir }    // direction explicite
 ClearSort
-SetColumnFilter { col_key: String, text: String }
+SetColumnFilter { col_key: String, condition: FilterCondition } // opérateur + valeur
+SetColumnValueFilter { col_key: String, values: HashSet<String> } // filtre à cases à cocher
+ClearColumnValueFilter { col_key: String }
 ClearAllFilters
+SetShowFilterRow(bool)      // afficher/masquer la ligne de filtre flottante
+SetFilterRowHeight(f64)     // hauteur en px logiques, ignoré si <= 0.0
 ```
+
+Voir [Filtrage](/fr/features/filtering.md) pour `FilterCondition`/`FilterOp`/`UniqueValues`.
 
 ### Édition
 

@@ -86,11 +86,13 @@ All available commands:
 
 ### Sorting & Filtering
 
-| Command                             | Description                     |
-| ----------------------------------- | ------------------------------- |
-| `ToggleSort { col_key }`            | Cycle: None → Asc → Desc → None |
-| `SetColumnFilter { col_key, text }` | Set per-column text filter      |
-| `ClearAllFilters`                   | Remove all active filters       |
+| Command                                    | Description                                                                                              |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| `ToggleSort { col_key }`                   | Cycle: None → Asc → Desc → None                                                                          |
+| `SetColumnFilter { col_key, condition }`   | Set a per-column filter condition (operator + value)                                                     |
+| `SetColumnValueFilter { col_key, values }` | Restrict a column to an explicit set of values (checklist filter), AND-combined with the condition above |
+| `ClearColumnValueFilter { col_key }`       | Remove a column's value-set restriction                                                                  |
+| `ClearAllFilters`                          | Remove all active filters (both conditions and value-set restrictions)                                   |
 
 ### Editing
 

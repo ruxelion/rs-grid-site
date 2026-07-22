@@ -136,8 +136,11 @@ build_url: Box::new(|req: &PageFetchRequest| {
     if let Some(sort) = &req.sort {
         url += &format!("&sort={}&dir={:?}", sort.col_key, sort.dir);
     }
-    for (col_key, text) in &req.filters {
-        url += &format!("&filter[{}]={}", col_key, text);
+    for (col_key, condition) in &req.filters {
+        url += &format!(
+            "&filter[{}][op]={:?}&filter[{}][value]={}",
+            col_key, condition.op, col_key, condition.value
+        );
     }
     url
 }),

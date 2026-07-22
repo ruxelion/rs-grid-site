@@ -79,9 +79,15 @@ resizing use `ResizeColumn` directly.
 ToggleSort { col_key: String }               // cycles asc → desc → off
 SetSort { col_key: String, dir: SortDir }    // explicit direction
 ClearSort
-SetColumnFilter { col_key: String, text: String }
+SetColumnFilter { col_key: String, condition: FilterCondition } // operator + value
+SetColumnValueFilter { col_key: String, values: HashSet<String> } // checklist filter
+ClearColumnValueFilter { col_key: String }
 ClearAllFilters
+SetShowFilterRow(bool)      // show/hide the floating filter row
+SetFilterRowHeight(f64)     // height in logical px, ignored if <= 0.0
 ```
+
+See [Filtering](/features/filtering) for `FilterCondition`/`FilterOp`/`UniqueValues`.
 
 ### Editing
 

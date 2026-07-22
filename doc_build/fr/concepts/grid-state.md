@@ -86,11 +86,13 @@ Toutes les commandes disponibles :
 
 ### Tri et filtrage
 
-| Commande                            | Description                                    |
-| ----------------------------------- | ---------------------------------------------- |
-| `ToggleSort { col_key }`            | Cycle : Aucun → Ascendant → Descendant → Aucun |
-| `SetColumnFilter { col_key, text }` | Definir un filtre texte par colonne            |
-| `ClearAllFilters`                   | Supprimer tous les filtres actifs              |
+| Commande                                   | Description                                                                                                                     |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `ToggleSort { col_key }`                   | Cycle : Aucun → Ascendant → Descendant → Aucun                                                                                  |
+| `SetColumnFilter { col_key, condition }`   | Definir une condition de filtre par colonne (operateur + valeur)                                                                |
+| `SetColumnValueFilter { col_key, values }` | Restreindre une colonne à un ensemble explicite de valeurs (filtre à cases à cocher), combiné en ET avec la condition ci-dessus |
+| `ClearColumnValueFilter { col_key }`       | Supprimer la restriction par ensemble de valeurs d'une colonne                                                                  |
+| `ClearAllFilters`                          | Supprimer tous les filtres actifs (conditions et restrictions par valeurs)                                                      |
 
 ### Edition
 
