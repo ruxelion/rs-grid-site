@@ -13,15 +13,15 @@ visibles dans le viewport à un instant donné, indépendamment du nombre total 
 
 Time per frame (µs)60fps budget: 16,600 µs
 
-20 cols × 10k rows18.7 µs
+20 cols × 10k rows20.0 µs
 
-50 cols × 1M rows30.4 µs
+50 cols × 1M rows32.1 µs
 
-100 cols × 10M rows37.8 µs
+100 cols × 10M rows38.7 µs
 
-1 000 cols × 1B rows38.3 µs
+1 000 cols × 1B rows40.0 µs
 
-50 cols × 1 quadrillion31.6 µs
+50 cols × 1 quadrillion33.2 µs
 
 All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
 
@@ -38,17 +38,17 @@ Varying row count (1 000 cols fixed)
 
 | Configuration | Hit-test time |
 | --- | --- |
-| 1 000 rows, 1 000 cols | 27.8 ns |
-| 1 billion rows, 1 000 cols | 33.8 ns |
-| 1 quadrillion rows, 1 000 cols | 27.8 ns |
+| 1 000 rows, 1 000 cols | 29.3 ns |
+| 1 billion rows, 1 000 cols | 35.8 ns |
+| 1 quadrillion rows, 1 000 cols | 28.2 ns |
 
 Varying column count (O(log n) in action)
 
 | Columns | Hit-test time |
 | --- | --- |
-| 10 cols | 10.1 ns |
-| 100 cols | 13.4 ns |
-| 1 000 cols | 17.6 ns |
+| 10 cols | 10.2 ns |
+| 100 cols | 14.0 ns |
+| 1 000 cols | 18.3 ns |
 
 
 L'augmentation de 1,7× de 10 à 1 000 colonnes (10 → 18 ns) reflète la recherche binaire sur
@@ -64,11 +64,11 @@ Varying row count — FnDataSource (20 cols fixed)
 
 | Rows | Init time |
 | --- | --- |
-| 1 000 | 1.8 µs |
+| 1 000 | 1.9 µs |
 | 100 000 | 2.3 µs |
 | 1 000 000 | 2.2 µs |
 | 100 000 000 | 2.2 µs |
-| 1 000 000 000 | 2.1 µs |
+| 1 000 000 000 | 2.2 µs |
 | 1 000 000 000 000 000 | 2.1 µs |
 
 Flat regardless of row count — O(n_cols), not O(n_rows).
@@ -79,11 +79,11 @@ Varying column count (1M rows fixed)
 
 20 cols2.1 µs
 
-50 cols5.5 µs
+50 cols5.8 µs
 
-100 cols11.2 µs
+100 cols11.6 µs
 
-1 000 cols110.5 µs
+1 000 cols114.5 µs
 
 Initialiser un grid avec **1 quadrillion de lignes virtuelles** prend les mêmes \~5 µs qu'un
 grid de 1 000 lignes. Si toutes les données sont en mémoire (`VecDataSource`), l'initialisation
@@ -98,15 +98,15 @@ cache de clés évite de ré-extraire les valeurs lors d'un toggle de direction 
 
 100 000 rows — sort time (ms)
 
-Numeric sort (cold)8.2 ms
+Numeric sort (cold)8.5 ms
 
 Radix sort, first call — key extraction + sort
 
-Numeric sort (cached)6.1 ms
+Numeric sort (cached)6.3 ms
 
 Radix sort, direction toggle — keys reused from cache
 
-String sort (cold)10.1 ms
+String sort (cold)10.4 ms
 
 Lexicographic comparison sort
 
@@ -132,5 +132,5 @@ Pour les grands datasets (> 100k lignes), préférez `FnDataSource` avec paginat
 Voir [FnDataSource](/fr/data/fn-datasource.md) et [PageCache](/fr/data/page-cache.md).
 
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `8644c4e` · November 27, 2026. Updated automatically on every push to `main` via CI.
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `cc30d47` · November 27, 2026. Updated automatically on every push to `main` via CI.
 
