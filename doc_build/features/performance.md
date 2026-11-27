@@ -13,15 +13,15 @@ viewport at any moment, regardless of how many rows exist in the datasource.
 
 Time per frame (µs)60fps budget: 16,600 µs
 
-20 cols × 10k rows30.5 µs
+20 cols × 10k rows19.4 µs
 
-50 cols × 1M rows40.0 µs
+50 cols × 1M rows30.9 µs
 
-100 cols × 10M rows48.8 µs
+100 cols × 10M rows38.2 µs
 
-1 000 cols × 1B rows48.4 µs
+1 000 cols × 1B rows38.8 µs
 
-50 cols × 1 quadrillion39.7 µs
+50 cols × 1 quadrillion32.1 µs
 
 All configs render in 65–89 µs — less than 0.6% of the 16.6 ms frame budget at 60fps. Row count has zero impact on frame time.
 
@@ -37,17 +37,17 @@ Varying row count (1 000 cols fixed)
 
 | Configuration | Hit-test time |
 | --- | --- |
-| 1 000 rows, 1 000 cols | 44.9 ns |
-| 1 billion rows, 1 000 cols | 62.0 ns |
-| 1 quadrillion rows, 1 000 cols | 37.5 ns |
+| 1 000 rows, 1 000 cols | 27.5 ns |
+| 1 billion rows, 1 000 cols | 34.0 ns |
+| 1 quadrillion rows, 1 000 cols | 26.3 ns |
 
 Varying column count (O(log n) in action)
 
 | Columns | Hit-test time |
 | --- | --- |
-| 10 cols | 16.7 ns |
-| 100 cols | 19.8 ns |
-| 1 000 cols | 28.1 ns |
+| 10 cols | 9.5 ns |
+| 100 cols | 13.7 ns |
+| 1 000 cols | 17.6 ns |
 
 
 The 1.7× increase from 10 → 1 000 columns (10 → 18 ns) reflects the binary search over column
@@ -63,26 +63,26 @@ Varying row count — FnDataSource (20 cols fixed)
 
 | Rows | Init time |
 | --- | --- |
-| 1 000 | 2.3 µs |
-| 100 000 | 2.4 µs |
-| 1 000 000 | 2.4 µs |
-| 100 000 000 | 2.4 µs |
-| 1 000 000 000 | 2.4 µs |
-| 1 000 000 000 000 000 | 2.3 µs |
+| 1 000 | 1.6 µs |
+| 100 000 | 2.0 µs |
+| 1 000 000 | 2.0 µs |
+| 100 000 000 | 2.0 µs |
+| 1 000 000 000 | 2.0 µs |
+| 1 000 000 000 000 000 | 2.0 µs |
 
 Flat regardless of row count — O(n_cols), not O(n_rows).
 
 Varying column count (1M rows fixed)
 
-5 cols0.6 µs
+5 cols0.5 µs
 
-20 cols2.3 µs
+20 cols1.9 µs
 
-50 cols6.3 µs
+50 cols5.3 µs
 
-100 cols13.0 µs
+100 cols11.2 µs
 
-1 000 cols129.9 µs
+1 000 cols114.6 µs
 
 Initializing a grid with **1 quadrillion virtual rows** takes the same \~5 µs as a grid with
 1 000 rows. If you need all data in memory (`VecDataSource`), initialization is still dominated
@@ -97,15 +97,15 @@ sort direction on the same column.
 
 100 000 rows — sort time (ms)
 
-Numeric sort (cold)13.8 ms
+Numeric sort (cold)9.7 ms
 
 Radix sort, first call — key extraction + sort
 
-Numeric sort (cached)10.0 ms
+Numeric sort (cached)7.0 ms
 
 Radix sort, direction toggle — keys reused from cache
 
-String sort (cold)18.9 ms
+String sort (cold)13.3 ms
 
 Lexicographic comparison sort
 
@@ -130,5 +130,5 @@ For large datasets (> 100k rows), prefer `FnDataSource` with server-side paginat
 See [FnDataSource](/data/fn-datasource.md) and [PageCache](/data/page-cache.md) for implementation details.
 
 
-Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `bf96af1` · November 27, 2026. Updated automatically on every push to `main` via CI.
+Measured with Criterion (sample-size=10) on `ubuntu-22.04` · commit `fa67b46` · November 27, 2026. Updated automatically on every push to `main` via CI.
 
